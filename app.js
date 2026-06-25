@@ -406,11 +406,34 @@ async function openMatchModal(matchId, t1, t2) {
 function closeModal() { document.getElementById('match-modal').style.display = 'none'; }
 
 async function loadMatchPronostics(matchId) {
-    const container = document.getElementById('prono-list-container'); container.innerHTML = "Chargement...";
-    const { data, error } = await supabaseClient.from('pronostics').select('*').eq('match_id', matchId);
-    if (error) { container.innerHTML = "Erreur."; return; }
-    if (!data || data.length === 0) { container.innerHTML = "Aucun pronostic déposé."; return; }
-    container.innerHTML = data.map(p => `<div class="prono-item"><span>👤 ${p.pseudo}</span><span class="prono-val">${p.predicted_score1} - ${p.predicted_score2}</span></div>`).join('');
+    const container = document.getElementById('prono-list-container'); 
+    container.innerHTML = "Chargement...";
+    
+    // 1. Récupérer les pronostics du match
+    const { data: pronos, error: pErr } = await supabaseClient.from('pronostics').select('*').eq('match_id', matchId);
+    if (pErr) { container.innerHTML = "Erreur."; return; }
+    if (!pronos || pronos.length === 0) { container.innerHTML = "Aucun pronostic déposé."; return; }
+    
+    // 2. Récupérer la liste des utilisateurs pour obtenir leurs avatars
+    const { data: users, error: uErr } = await supabaseClient.from('users').select('pseudo, avatar');
+    if (uErr) { container.innerHTML = "Erreur."; return; }
+
+    // 3. Créer un dictionnaire pour associer rapidement le pseudo à l'avatar
+    let userAvatars = {};
+    users.forEach(u => {
+        userAvatars[u.pseudo] = u.avatar || '⚽'; // '⚽' par défaut si vide
+    });
+
+    // 4. Générer le HTML avec le bon avatar
+    container.innerHTML = pronos.map(p => {
+        const playerAvatar = userAvatars[p.pseudo] || '⚽';
+        return `
+            <div class="prono-item">
+                <span><span class="profile-avatar">${playerAvatar}</span> ${p.pseudo}</span>
+                <span class="prono-val">${p.predicted_score1} - ${p.predicted_score2}</span>
+            </div>
+        `;
+    }).join('');
 }
 
 async function saveUserPronostic() {
