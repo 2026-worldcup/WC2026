@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Cup 2026 – Pronostics & Classement</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-inner">
+        <div class="logo-area">
+            <div class="logo-title-row">
+                <h1>WORLD CUP 2026<span class="accent">™</span></h1>
+                <button id="theme-toggle" class="btn-theme-toggle" onclick="toggleTheme()">🌙 Mode Sombre</button>
+            </div>
+            <p class="subtitle">Simulateur & Classement de la Communauté</p>
+        </div>
+        
+        <div id="auth-bar" class="auth-bar">
+            <div id="auth-logged-out" class="auth-form">
+                <select id="auth-avatar" class="auth-field avatar-select" title="Choisir un avatar">
+                    <option value="⚽">⚽</option>
+                    <option value="🏐">🏐</option>
+                    <option value="🏀">🏀</option>
+                    <option value="🥅">🥅</option>
+                    <option value="🏃‍♂️">🏃‍♂️</option>
+                    <option value="🤾">🤾</option>
+                    <option value="⛹️">⛹️</option>
+                    <option value="🦁">🦁</option>
+                    <option value="🦅">🦅</option>
+                    <option value="🦊">🦊</option>
+                    <option value="🐺">🐺</option>
+                    <option value="🐉">🐉</option>
+                    <option value="🐯">🐯</option>
+                    <option value="🐼">🐼</option>
+                    <option value="🦄">🦄</option>
+                    <option value="😎">😎</option>
+                    <option value="🤠">🤠</option>
+                    <option value="🥸">🥸</option>
+                    <option value="🤯">🤯</option>
+                    <option value="🤨">🤨</option>
+                    <option value="😏">😏</option>
+                    <option value="😜">😜</option>
+                    <option value="🤙">🤙</option>
+                    <option value="⚡">⚡</option>
+                    <option value="🔥">🔥</option>
+                    <option value="💥">💥</option>
+                    <option value="🌪️">🌪️</option>
+                    <option value="✨">✨</option>
+                    <option value="👑">👑</option>
+                    <option value="🏆">🏆</option>
+                    <option value="💎">💎</option>
+                    <option value="⭐">⭐</option>
+                    <option value="🥇">🥇</option>
+                </select>
+                <input type="text" id="auth-pseudo" placeholder="Pseudo unique" class="auth-field">
+                <input type="password" id="auth-code" placeholder="Code secret" class="auth-field">
+                <button class="btn-auth" onclick="handleAuth()">Rejoindre / Connexion</button>
+            </div>
+            <div id="auth-logged-in" class="auth-profile" style="display: none;">
+                <span class="welcome-text"><span id="user-display-avatar" class="profile-avatar"></span> Joueur : <strong id="user-display-name"></strong></span>
+                <button class="btn-logout" onclick="handleLogout()">Déconnexion</button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<nav class="tabs">
+    <button class="tab active" onclick="showSection('G1', this)">Groupes A–F</button>
+    <button class="tab" onclick="showSection('G2', this)">Groupes G–L</button>
+    <button class="tab" onclick="showSection('KO', this)">Phase Finale</button>
+    <button class="tab" onclick="showSection('LEADERBOARD', this)">🏆 Classement des Joueurs</button>
+    <button class="tab tab-desktop-only" onclick="showSection('IO', this)">Console Admin</button>
+</nav>
+
+<main class="main">
+    <section class="container group-grid active" id="sec-G1"></section>
+    <section class="container group-grid" id="sec-G2"></section>
+
+    <!-- TABLEAU DE CLASSEMENT DES JOUEURS -->
+    <section class="container" id="sec-LEADERBOARD">
+        <div class="card">
+            <h2>Classement Général de la Ligue</h2>
+            <p class="desc">Barème : <strong>3 pts</strong> pour un score exact, <strong>1 pt</strong> pour le bon vainqueur/nul, <strong>0 pt</strong> en cas de mauvais pronostic.</p>
+            <div style="overflow-x: auto; margin-top: 20px;">
+                <table class="standing-table leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 70px;">Rang</th>
+                            <th>Joueur</th>
+                            <th style="text-align: center;">Score Exact (3p)</th>
+                            <th style="text-align: center;">Bon Résultat (1p)</th>
+                            <th style="text-align: right; padding-right: 15px;">Total Points</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-tbody">
+                        <tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-muted);">Chargement du classement général...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- PHASE FINALE -->
+    <section class="container" id="sec-KO">
+        <div class="card knockout-board">
+            <div class="knockout-header-actions">
+                <div>
+                    <h2>Arbre Éliminatoire Direct</h2>
+                    <p class="desc">Consultez l'arbre ou cliquez sur un match pour voir les pronostics déposés.</p>
+                </div>
+                <button class="btn secondary" onclick="exportBracketToPNG()">📸 Capturer l'arbre</button>
+            </div>
+            
+            <div class="bracket-scroll-wrapper">
+                <div class="bracket-container" id="bracket-capture-target">
+                    <div class="bracket-column">
+                        <div class="column-title">Seizièmes</div>
+                        <div id="box-16es" class="column-match-list"></div>
+                    </div>
+                    <div class="bracket-column">
+                        <div class="column-title">Huitièmes</div>
+                        <div id="box-8es" class="column-match-list"></div>
+                    </div>
+                    <div class="bracket-column">
+                        <div class="column-title">Quarts</div>
+                        <div id="box-quarts" class="column-match-list"></div>
+                    </div>
+                    <div class="bracket-column">
+                        <div class="column-title">Demi-finales</div>
+                        <div id="box-demis" class="column-match-list"></div>
+                    </div>
+                    <div class="bracket-column final-column">
+                        <div class="final-section-wrapper">
+                            <div class="column-title gold-title">Grande Finale</div>
+                            <div id="box-finale"></div>
+                        </div>
+                        <div class="champion-box">
+                            <h3>🏆 CHAMPION DU MONDE 🏆</h3>
+                            <div id="world-champion">À déterminer</div>
+                        </div>
+                        <div class="final-section-wrapper bronze-section">
+                            <div class="column-title silver-title">Petite Finale</div>
+                            <div id="box-petite-finale"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONSOLE ADMIN -->
+    <section class="container" id="sec-IO">
+        <div class="card">
+            <h2>Console d'Administration Globale</h2>
+            <p class="desc">Permet la mise à jour forcée des scores réels sur la base Cloud Supabase.</p>
+            <div class="admin-auth-box">
+                <label for="import-code-input" class="admin-label">Jeton d'authentification Admin :</label>
+                <input type="password" id="import-code-input" class="auth-field" placeholder="Entrez le jeton de configuration">
+            </div>
+            <textarea id="io-text" class="io-textarea" placeholder="Format : G.MEX-RSA:2-1"></textarea>
+            <div class="btn-group" style="margin-top: 15px; display: flex; gap: 10px;">
+                <button class="btn primary" onclick="importData()">Enregistrer sur Supabase</button>
+                <button class="btn secondary" onclick="exportData()">Générer la configuration</button>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- FENÊTRE MODALE -->
+<div id="match-modal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="modal-header">
+            <span id="modal-match-title" class="modal-title">Fiche Match</span>
+            <button class="close-modal-btn" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-date-info" id="modal-match-date">-</div>
+            
+            <div class="modal-score-board">
+                <div class="modal-team"><span id="modal-t1-name">-</span></div>
+                <div class="modal-score-display" id="modal-score-val">-</div>
+                <div class="modal-team text-right"><span id="modal-t2-name">-</span></div>
+            </div>
+            <div id="modal-tab-val" class="modal-tab-badge"></div>
+
+            <div class="pronostics-section">
+                <h3>📊 Pronostics de la communauté</h3>
+                <div id="prono-list-container" class="prono-list">Chargement...</div>
+                
+                <div id="modal-lock-msg" class="lock-alert-message" style="display:none;"></div>
+
+                <div id="prono-form-card" class="prono-form-card">
+                    <h4>Déposer mon pronostic</h4>
+                    <div class="prono-inputs">
+                        <input type="number" id="prono-s1" class="prono-field" min="0" placeholder="0">
+                        <span class="sep">X</span>
+                        <input type="number" id="prono-s2" class="prono-field" min="0" placeholder="0">
+                    </div>
+                    <button class="btn-submit-prono" onclick="saveUserPronostic()">Valider mon pronostic</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
