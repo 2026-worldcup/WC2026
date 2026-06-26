@@ -24,39 +24,7 @@
         <div id="auth-bar" class="auth-bar">
             <div id="auth-logged-out" class="auth-form">
                 <select id="auth-avatar" class="auth-field avatar-select" title="Choisir un avatar">
-                    <option value="⚽">⚽</option>
-                    <option value="🏐">🏐</option>
-                    <option value="🏀">🏀</option>
-                    <option value="🥅">🥅</option>
-                    <option value="🏃‍♂️">🏃‍♂️</option>
-                    <option value="🤾">🤾</option>
-                    <option value="⛹️">⛹️</option>
-                    <option value="🦁">🦁</option>
-                    <option value="🦅">🦅</option>
-                    <option value="🦊">🦊</option>
-                    <option value="🐺">🐺</option>
-                    <option value="🐉">🐉</option>
-                    <option value="🐯">🐯</option>
-                    <option value="🐼">🐼</option>
-                    <option value="🦄">🦄</option>
-                    <option value="😎">😎</option>
-                    <option value="🤠">🤠</option>
-                    <option value="🥸">🥸</option>
-                    <option value="🤯">🤯</option>
-                    <option value="🤨">🤨</option>
-                    <option value="😏">😏</option>
-                    <option value="😜">😜</option>
-                    <option value="🤙">🤙</option>
-                    <option value="⚡">⚡</option>
-                    <option value="🔥">🔥</option>
-                    <option value="💥">💥</option>
-                    <option value="🌪️">🌪️</option>
-                    <option value="✨">✨</option>
-                    <option value="👑">👑</option>
-                    <option value="🏆">🏆</option>
-                    <option value="💎">💎</option>
-                    <option value="⭐">⭐</option>
-                    <option value="🥇">🥇</option>
+                    <!-- Rempli dynamiquement par JS -->
                 </select>
                 <input type="text" id="auth-pseudo" placeholder="Pseudo unique" class="auth-field">
                 <input type="password" id="auth-code" placeholder="Code secret" class="auth-field">
@@ -74,32 +42,90 @@
     <button class="tab active" onclick="showSection('G1', this)">Groupes A–F</button>
     <button class="tab" onclick="showSection('G2', this)">Groupes G–L</button>
     <button class="tab" onclick="showSection('KO', this)">Phase Finale</button>
-    <button class="tab" onclick="showSection('LEADERBOARD', this)">🏆 Classement des Joueurs</button>
+    <button class="tab" onclick="showSection('LEADERBOARD', this)">🏆 Classement</button>
+    <button class="tab" onclick="showSection('account', this); updateAccountDashboard();">👤 Mon Compte</button>
     <button class="tab tab-desktop-only" onclick="showSection('IO', this)">Console Admin</button>
 </nav>
 
 <main class="main">
+    <!-- SECTIONS DES GROUPES -->
     <section class="container group-grid active" id="sec-G1"></section>
     <section class="container group-grid" id="sec-G2"></section>
+
+    <!-- SECTION GESTION DE COMPTE -->
+    <div id="sec-account" class="container">
+        <!-- État Déconnecté -->
+        <div id="account-logged-out-view" class="card account-card text-center">
+            <div class="lock-icon">🔒</div>
+            <h2>Espace Privé</h2>
+            <p class="desc">Veuillez vous connecter ou créer un compte via la barre d'authentification en haut de page pour accéder à vos statistiques et alertes personnalisées.</p>
+        </div>
+
+        <!-- État Connecté -->
+        <div id="account-logged-in-view" class="card account-card" style="display: none;">
+            <h2 class="section-title">⚙️ Gestion de mon compte</h2>
+            
+            <div class="account-form">
+                <div class="form-group">
+                    <label for="acc-input-pseudo">Mon Pseudo :</label>
+                    <input type="text" id="acc-input-pseudo" class="auth-field full-width">
+                </div>
+                <div class="form-group">
+                    <label for="acc-select-avatar">Mon Avatar :</label>
+                    <select id="acc-select-avatar" class="auth-field full-width cursor-pointer">
+                        <!-- Rempli dynamiquement par JS -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="acc-input-code">Mon Code Secret :</label>
+                    <input type="text" id="acc-input-code" class="auth-field full-width">
+                </div>
+                <button onclick="saveAccountChanges()" class="btn primary full-width">Enregistrer les modifications</button>
+            </div>
+
+            <hr class="divider">
+
+            <h3 class="subsection-title">📊 Mon Statut Actuel</h3>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span class="stat-label">Rang actuel</span>
+                    <div id="acc-stat-rank" class="stat-value primary-color">--</div>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Total Points</span>
+                    <div id="acc-stat-pts" class="stat-value accent-color">-- pts</div>
+                </div>
+            </div>
+            <div id="acc-stat-details" class="stat-details"></div>
+
+            <hr class="divider">
+
+            <h3 class="subsection-title warning-color">⏳ Pronos manquants (Prochaines 48h)</h3>
+            <div id="acc-missing-pronos" class="missing-pronos-container">
+                <!-- Rempli par le JS -->
+            </div>
+        </div>
+    </div>
 
     <!-- TABLEAU DE CLASSEMENT DES JOUEURS -->
     <section class="container" id="sec-LEADERBOARD">
         <div class="card">
             <h2>Classement Général de la Ligue</h2>
-            <p class="desc">Barème : <strong>3 pts</strong> pour un score exact, <strong>1 pt</strong> pour le bon vainqueur/nul, <strong>0 pt</strong> en cas de mauvais pronostic.</p>
+            <p class="desc">Barème : <strong>5 pts</strong> pour un score exact, <strong>3 pts</strong> pour une bonne différence de score, <strong>2 pts</strong> pour une bonne issue.</p>
             <div style="overflow-x: auto; margin-top: 20px;">
                 <table class="standing-table leaderboard-table">
                     <thead>
                         <tr>
                             <th style="width: 70px;">Rang</th>
                             <th>Joueur</th>
-                            <th style="text-align: center;">Score Exact (3p)</th>
-                            <th style="text-align: center;">Bon Résultat (1p)</th>
+                            <th style="text-align: center;">Score Exact (5p)</th>
+                            <th style="text-align: center;">Bonne Diff (3p)</th>
+                            <th style="text-align: center;">Bon Résultat (2p)</th>
                             <th style="text-align: right; padding-right: 15px;">Total Points</th>
                         </tr>
                     </thead>
                     <tbody id="leaderboard-tbody">
-                        <tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-muted);">Chargement du classement général...</td></tr>
+                        <tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--text-muted);">Chargement du classement général...</td></tr>
                     </tbody>
                 </table>
             </div>

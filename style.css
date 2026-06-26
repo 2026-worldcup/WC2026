@@ -13,6 +13,7 @@
     --text-bracket: #ffffff;
     --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     --transition: all 0.2s ease;
+    --bg-phase-finale: #ffffff; 
 }
 
 body.dark-mode {
@@ -25,6 +26,7 @@ body.dark-mode {
     --bg-input: #1e293b;
     --bg-match: #16224f;
     --shadow: 0 4px 12px rgba(0,0,0,0.3);
+    --bg-phase-finale: #111a2e; 
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; transition: background-color var(--transition), border-color var(--transition); }
@@ -42,6 +44,7 @@ body { font-family: 'Montserrat', system-ui, sans-serif; background: var(--bg-bo
 .auth-bar { background: rgba(255, 255, 255, 0.04); padding: 12px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08); }
 .auth-form { display: flex; gap: 8px; flex-wrap: wrap; }
 .auth-field { background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; outline: none; }
+.auth-field.full-width { width: 100%; text-align: left; padding: 10px; height: auto; }
 .avatar-select { cursor: pointer; font-size: 1rem; padding: 6px; }
 .profile-avatar { font-size: 1.2rem; margin-right: 4px; vertical-align: middle; }
 .btn-auth { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; }
@@ -74,26 +77,111 @@ body { font-family: 'Montserrat', system-ui, sans-serif; background: var(--bg-bo
 
 /* BADGES D'ÉTATS DES MATCHS */
 .status-badge { padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; text-transform: uppercase; color: white; font-weight: 800; }
-.status-badge.complete { background: #475569; }       /* Terminé */
-.status-badge.live { background: #16a34a; }           /* À venir ou en cours */
-.status-badge.unknown { background: #ffffff; }        /* Horaire inconnu */
+.status-badge.complete { background: #475569; }       
+.status-badge.live { background: #16a34a; }           
+.status-badge.unknown { background: #ffffff; }        
 
 .match-teams { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
 .team-name { font-weight: 700; width: 42%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .team-name:last-child { text-align: right; }
 .score-box-view { width: 55px; font-weight: 800; font-size: 1rem; text-align: center; color: white; background: #1e293b; padding: 4px; border-radius: 6px; }
 
+/* REFACTORING DE LA PAGE MON COMPTE (DASHBOARD) */
+.account-card { max-width: 600px; margin: 0 auto; }
+.account-form { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; margin-top: 20px; }
+.form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
+.section-title { color: var(--primary); margin-bottom: 10px; font-weight: 800; }
+.subsection-title { margin-bottom: 15px; font-weight: 700; font-size: 1.1rem; }
+.divider { border: 0; border-top: 1px solid var(--border); margin: 25px 0; }
+.stats-grid { display: flex; gap: 15px; margin-bottom: 15px; }
+.stat-box { flex: 1; background: var(--bg-match); padding: 15px; border-radius: 8px; text-align: center; border: 1px solid var(--border); }
+.stat-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+.stat-value { font-size: 1.6rem; font-weight: 800; margin-top: 4px; }
+.stat-details { font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-bottom: 10px; font-weight: 600; }
+.missing-pronos-container { display: flex; flex-direction: column; gap: 10px; }
+.lock-icon { font-size: 3.5rem; margin-bottom: 15px; }
+.text-center { text-align: center; }
+.full-width { width: 100%; }
+.cursor-pointer { cursor: pointer; }
+
+/* COULEURS THEMATIQUES COMPTE */
+.primary-color { color: var(--primary); }
+.accent-color { color: var(--accent); }
+.warning-color { color: #e63946; }
+
+/* ALERTES MISSING PRONOS DYNAMIQUES */
+.missing-prono-item { cursor: pointer; padding: 12px; background: rgba(230, 57, 70, 0.06); border-left: 4px solid #e63946; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.missing-prono-info strong { font-size: 0.85rem; }
+.missing-prono-info small { color: var(--text-muted); font-weight: 600; }
+.missing-prono-btn { font-size: 0.8rem; background: #e63946; color: white; padding: 6px 12px; border-radius: 4px; font-weight: 700; text-transform: uppercase; border: none; }
+
 /* BRACKETS (PHASE FINALE) */
 .knockout-header-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; }
 .desc { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
-.bracket-scroll-wrapper { overflow-x: auto; border-radius: 12px; background: var(--bg-bracket); border: 1px solid var(--border); }
+
+.bracket-scroll-wrapper { 
+    /* --- STYLE PAR DÉFAUT : THÈME CLAIR (Contraste, épaisseur et relief) --- */
+    --bracket-wrapper-bg: #ffffff;          /* Fond blanc pour détacher l'arbre du fond gris */
+    --bracket-match-bg: #f8fafc;            /* Fond des lignes de match légèrement grisé */
+    --bracket-match-border: 2px solid #cbd5e1; /* Bordure de match plus épaisse et visible */
+    --bracket-team-color: #0f172a;          /* Noms d'équipes très sombres et lisibles */
+    --bracket-score-bg: #0f2557;            /* Boîtier de score bleu foncé contrasté */
+    --bracket-score-color: #ffffff;         /* Texte du score en blanc */
+    --bracket-title-color: #334155;         /* Titres des étapes (Huitièmes, Quarts...) */
+    --bracket-title-border: 2px solid #cbd5e1;
+    --bracket-shadow: 0 4px 12px rgba(15, 23, 42, 0.06); /* Ombre douce pour donner du relief */
+
+    overflow-x: auto; 
+    border-radius: 12px; 
+    background: var(--bracket-wrapper-bg); 
+    border: 2px solid #cbd5e1; 
+    box-shadow: var(--bracket-shadow);
+}
+
+/* --- CONSERVATION STRICTE DU THÈME SOMBRE D'ORIGINE --- */
+body.dark-mode .bracket-scroll-wrapper { 
+    --bracket-wrapper-bg: #0b1329;          /* Reprend votre ancien var(--bg-bracket) */
+    --bracket-match-bg: rgba(255, 255, 255, 0.03);
+    --bracket-match-border: 1px solid rgba(255, 255, 255, 0.08);
+    --bracket-team-color: #ffffff;          /* Reprend votre ancien var(--text-bracket) */
+    --bracket-score-bg: rgba(255, 255, 255, 0.12);
+    --bracket-score-color: #ffffff;
+    --bracket-title-color: #94a3b8;
+    --bracket-title-border: 2px solid rgba(255, 255, 255, 0.1);
+    --bracket-shadow: none;
+
+    border: 1px solid var(--border);
+}
+
 .bracket-container { display: flex; gap: 40px; padding: 30px; min-width: 1450px; }
 .bracket-column { display: flex; flex-direction: column; width: 250px; }
-.column-title { color: #94a3b8; text-align: center; font-size: 0.75rem; font-weight: 800; margin-bottom: 15px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 8px; text-transform: uppercase; }
+
+.column-title { 
+    color: var(--bracket-title-color); 
+    text-align: center; 
+    font-size: 0.75rem; 
+    font-weight: 800; 
+    margin-bottom: 15px; 
+    border-bottom: var(--bracket-title-border); 
+    padding-bottom: 8px; 
+    text-transform: uppercase; 
+}
+
 .column-match-list { display: flex; flex-direction: column; justify-content: space-around; height: 100%; gap: 15px; }
-.bracket-container .match-row { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); }
-.bracket-container .team-name { color: var(--text-bracket); }
-.bracket-container .score-box-view { background: rgba(255,255,255,0.12); }
+
+.bracket-container .match-row { 
+    background: var(--bracket-match-bg); 
+    border: var(--bracket-match-border); 
+    box-shadow: var(--bracket-shadow);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.bracket-container .match-row:hover { 
+    border-color: var(--accent); 
+    transform: translateY(-2px); /* Petit effet de survol dynamique sympa */
+}
+
+.bracket-container .team-name { color: var(--bracket-team-color); }
+.bracket-container .score-box-view { background: var(--bracket-score-bg); color: var(--bracket-score-color); }
 .champion-box { background: linear-gradient(135deg, var(--gold), #ffda79); text-align: center; padding: 15px; border-radius: 10px; color: #0f172a; font-weight: 800; margin: 20px 0; }
 
 /* BOUTONS GENERIQUES */

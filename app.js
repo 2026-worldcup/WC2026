@@ -2,6 +2,13 @@ const SUPABASE_URL = "https://ugwjflbeyjfaidwhweva.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_ljkn1OeUIHwXIx2o3djCGQ_-UmMaO9I";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Centralisation globale de la liste d'émojis avatars
+const AVATAR_EMOJIS = [
+    "⚽", "🏐", "🏀", "🥅", "🏃‍♂️", "🤾", "⛹️", "🦁", "🦅", "🦊", "🐺", "🐉", 
+    "🐯", "🐼", "🦄", "😎", "🤠", "🥸", "🤯", "🤨", "😏", "😜", "🤙", "⚡", 
+    "🔥", "💥", "🌪️", "✨", "👑", "🏆", "💎", "⭐", "🥇"
+];
+
 const MATCH_SCHEDULE = {
     // ============================
     // PHASE DE GROUPES (11 → 24 juin)
@@ -70,7 +77,7 @@ const MATCH_SCHEDULE = {
     "8-5": { display: "Lundi 6 Juillet – 21:00", iso: "2026-07-06T21:00:00+02:00" },
     "8-6": { display: "Mardi 7 Juillet – 02:00", iso: "2026-07-07T02:00:00+02:00" },
     "8-7": { display: "Mardi 7 Juillet – 18:00", iso: "2026-07-07T18:00:00+02:00" },
-    "8-8": { display: "Mardi 7 Juillet – 22:00", iso: "2026-07-07T22:00:00+02:00" },
+    "8-8": { display: "Mardi 7 Juillet – 22:00", iso: "2026-07-22T22:00:00+02:00" },
 
     // Quarts
     "4-1": { display: "Jeudi 9 Juillet – 22:00", iso: "2026-07-09T22:00:00+02:00" },
@@ -128,7 +135,6 @@ const FLAGS = {
     'POR': '🇵🇹', 'COD': '🇨🇩', 'UZB': '🇺🇿', 'COL': '🇨🇴', 'ENG': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'CRO': '🇭🇷', 'GHA': '🇬🇭', 'PAN': '🇵🇦'
 };
 
-// Ordre d'affichage visuel dans l'arbre pour que tout soit aligné horizontalement "en face"
 const STAGE_ORDERS = {
     '16': [1, 4, 3, 6, 12, 11, 10, 9, 2, 5, 7, 8, 15, 14, 13, 16],
     '8': [1, 2, 5, 6, 3, 4, 7, 8],
@@ -138,7 +144,6 @@ const STAGE_ORDERS = {
     'F': [1]
 };
 
-// Libellés initiaux indicatifs d'attente
 const KNOCKOUT_PLACEHOLDERS = {
     "16-1-t1": "2A", "16-1-t2": "2B",
     "16-2-t1": "1C", "16-2-t2": "2F",
@@ -172,7 +177,7 @@ const KNOCKOUT_PLACEHOLDERS = {
     "4-4-t1": "8-7", "4-4-t2": "8-8",
 
     "2-1-t1": "4-1", "2-1-t2": "4-2",
-    "2-2-t1": "4-3", "2-2-t2": "4-4",
+    "2-2-t1": "4-3", "2-2-t1": "4-4",
 
     "3-1-t1": "p. 2-1", "3-1-t2": "p. 2-2",
     "F-1-t1": "2-1", "F-1-t2": "2-2"
@@ -187,6 +192,7 @@ for (let l in TEAMS) {
 let scores = {}; 
 let tree = {}; 
 let currentActiveMatchId = null;
+let globalRankList = []; 
 
 const KNOCKOUT_LINKS = {
     '16-1': { nextId: 1, nextPos: 't1' }, '16-4': { nextId: 1, nextPos: 't2' },
@@ -210,10 +216,28 @@ const KNOCKOUT_LINKS = {
 };
 
 function initTheme() {
-    if (localStorage.getItem('wc_theme') === 'dark') {
+    const savedTheme = localStorage.getItem('wc_theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
         document.body.classList.add('dark-mode');
         document.getElementById('theme-toggle').innerText = "☀️ Mode Clair";
+    } else {
+        document.body.classList.remove('dark-mode');
+        document.getElementById('theme-toggle').innerText = "🌙 Mode Sombre";
     }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        if (!localStorage.getItem('wc_theme')) { 
+            if (e.matches) {
+                document.body.classList.add('dark-mode');
+                document.getElementById('theme-toggle').innerText = "☀️ Mode Clair";
+            } else {
+                document.body.classList.remove('dark-mode');
+                document.getElementById('theme-toggle').innerText = "🌙 Mode Sombre";
+            }
+        }
+    });
 }
 
 function toggleTheme() {
@@ -223,8 +247,20 @@ function toggleTheme() {
     document.getElementById('theme-toggle').innerText = isDark ? "☀️ Mode Clair" : "🌙 Mode Sombre";
 }
 
+// Injection unifiée de la liste des avatars
+function populateAvatars() {
+    const authSelect = document.getElementById('auth-avatar');
+    const accSelect = document.getElementById('acc-select-avatar');
+    
+    const optionsHTML = AVATAR_EMOJIS.map(emoji => `<option value="${emoji}">${emoji}</option>`).join('');
+    
+    if (authSelect) authSelect.innerHTML = optionsHTML;
+    if (accSelect) accSelect.innerHTML = optionsHTML;
+}
+
 async function init() {
     initTheme();
+    populateAvatars();
     updateAuthUI();
     renderGroupsSection(['A','B','C','D','E','F'], 'sec-G1');
     renderGroupsSection(['G','H','I','J','K','L'], 'sec-G2');
@@ -241,8 +277,7 @@ function getMatchTimeContext(matchId) {
 }
 
 function renderStatusBadgeHTML(context) {
-    if (context.status === 'complete') return `<span class="status-badge complete">Terminé</span>`;
-    if (context.status === 'unknown') return `<span class="status-badge unknown">Terminé</span>`;
+    if (context.status === 'complete' || context.status === 'unknown') return `<span class="status-badge complete">Terminé</span>`;
     return `<span class="status-badge live">À venir</span>`;
 }
 
@@ -261,6 +296,7 @@ async function handleAuth() {
             localStorage.setItem('wc_code', code);
             localStorage.setItem('wc_avatar', user.avatar || '⚽');
             updateAuthUI();
+            if (document.getElementById('sec-account').classList.contains('active')) updateAccountDashboard();
         } else { alert("Code secret erroné."); }
     } else {
         const { error: insError } = await supabaseClient.from('users').insert({ pseudo, code, avatar });
@@ -268,11 +304,16 @@ async function handleAuth() {
         else {
             localStorage.setItem('wc_pseudo', pseudo); localStorage.setItem('wc_code', code); localStorage.setItem('wc_avatar', avatar);
             updateAuthUI(); await calculateLeaderboard();
+            if (document.getElementById('sec-account').classList.contains('active')) updateAccountDashboard();
         }
     }
 }
 
-function handleLogout() { localStorage.clear(); updateAuthUI(); }
+function handleLogout() { 
+    localStorage.clear(); 
+    updateAuthUI(); 
+    if (document.getElementById('sec-account').classList.contains('active')) updateAccountDashboard();
+}
 
 function updateAuthUI() {
     const pseudo = localStorage.getItem('wc_pseudo');
@@ -326,6 +367,117 @@ function renderGroupsSection(letters, containerId) {
             <div class="match-list" id="matches-${group}"></div>`;
         container.appendChild(card); renderGroupMatches(group);
     });
+}
+
+async function updateAccountDashboard() {
+    const pseudo = localStorage.getItem('wc_pseudo');
+    const loggedOutView = document.getElementById('account-logged-out-view');
+    const loggedInView = document.getElementById('account-logged-in-view');
+
+    if (!pseudo) {
+        if(loggedOutView) loggedOutView.style.display = 'block';
+        if(loggedInView) loggedInView.style.display = 'none';
+        return;
+    }
+
+    if(loggedOutView) loggedOutView.style.display = 'none';
+    if(loggedInView) loggedInView.style.display = 'block';
+
+    // 1. Récupération des statistiques depuis le classement général calculé
+    const myStats = globalRankList.find(p => p.pseudo === pseudo);
+    if (myStats) {
+        document.getElementById('acc-stat-rank').innerText = `#${myStats.rank}`;
+        document.getElementById('acc-stat-pts').innerText = `${myStats.totalPoints} pts`;
+        document.getElementById('acc-stat-details').innerText = `Détails : ${myStats.exacts} exacts | ${myStats.diffs} écarts | ${myStats.partials} issues`;
+    } else {
+        document.getElementById('acc-stat-rank').innerText = `--`;
+        document.getElementById('acc-stat-pts').innerText = `0 pts`;
+        document.getElementById('acc-stat-details').innerText = `Aucun match calculé`;
+    }
+
+    // 2. Traitement des pronostics manquants (Fenêtre glissante de 48 heures)
+    const now = new Date();
+    const fortyEightHoursLater = new Date(now.getTime() + (48 * 60 * 60 * 1000));
+    
+    const { data: myPronos } = await supabaseClient.from('pronostics').select('match_id').eq('pseudo', pseudo);
+    const predictedMatchIds = new Set(myPronos ? myPronos.map(p => p.match_id) : []);
+
+    let upcomingMissingHTML = '';
+    
+    for (let matchId in MATCH_SCHEDULE) {
+        const m = MATCH_SCHEDULE[matchId];
+        if (m.iso) {
+            const matchDate = new Date(m.iso);
+            if (matchDate > now && matchDate <= fortyEightHoursLater && !predictedMatchIds.has(matchId)) {
+                let t1 = "Équipe A", t2 = "Équipe B";
+                
+                if (matchId.startsWith('G-')) {
+                    const parts = matchId.split('-');
+                    const gLetter = parts[1];
+                    const mIdx = parseInt(parts[2]);
+                    if (GROUP_MATCHES[gLetter] && GROUP_MATCHES[gLetter][mIdx]) {
+                        t1 = GROUP_MATCHES[gLetter][mIdx].t1;
+                        t2 = GROUP_MATCHES[gLetter][mIdx].t2;
+                    }
+                } else {
+                    t1 = tree[`${matchId}-t1`] || "En attente";
+                    t2 = tree[`${matchId}-t2`] || "En attente";
+                }
+
+                upcomingMissingHTML += `
+                    <div class="missing-prono-item" onclick="showSection('G1', document.querySelector('.tab')); openMatchModal('${matchId}', '${t1}', '${t2}')">
+                        <div class="missing-prono-info">
+                            <strong>${m.display}</strong><br>
+                            <small>${t1} 🆚 ${t2}</small>
+                        </div>
+                        <button class="missing-prono-btn">Parier ⚡</button>
+                    </div>`;
+            }
+        }
+    }
+    
+    document.getElementById('acc-missing-pronos').innerHTML = upcomingMissingHTML || "<p style='color:green; font-weight:600; text-align:center; padding:10px;'>🎉 Parfait ! Aucun pronostic manquant pour les prochaines 48h.</p>";
+    
+    // 3. Remplissage automatique des champs de configuration
+    document.getElementById('acc-input-pseudo').value = pseudo;
+    document.getElementById('acc-input-code').value = localStorage.getItem('wc_code') || '';
+    document.getElementById('acc-select-avatar').value = localStorage.getItem('wc_avatar') || '⚽';
+}
+
+async function saveAccountChanges() {
+    const oldPseudo = localStorage.getItem('wc_pseudo');
+    const oldCode = localStorage.getItem('wc_code');
+    if (!oldPseudo) return;
+
+    const newPseudo = document.getElementById('acc-input-pseudo').value.trim();
+    const newCode = document.getElementById('acc-input-code').value.trim();
+    const newAvatar = document.getElementById('acc-select-avatar').value;
+
+    if (!newPseudo || !newCode) { alert("Les champs ne peuvent pas être vides."); return; }
+
+    if (newPseudo !== oldPseudo) {
+        const { data: checkUser } = await supabaseClient.from('users').select('pseudo').eq('pseudo', newPseudo).maybeSingle();
+        if (checkUser) { alert("Ce pseudo est déjà utilisé par un autre joueur."); return; }
+    }
+
+    const { error: uError } = await supabaseClient.from('users').update({
+        pseudo: newPseudo, code: newCode, avatar: newAvatar
+    }).eq('pseudo', oldPseudo).eq('code', oldCode);
+
+    if (uError) { alert("Erreur lors de la mise à jour : " + uError.message); return; }
+
+    if (newPseudo !== oldPseudo) {
+        await supabaseClient.from('pronostics').update({ pseudo: newPseudo, user_code: newCode }).eq('pseudo', oldPseudo);
+    }
+
+    localStorage.setItem('wc_pseudo', newPseudo);
+    localStorage.setItem('wc_code', newCode);
+    localStorage.setItem('wc_avatar', newAvatar);
+
+    alert("Compte mis à jour avec succès !");
+    updateAuthUI();
+    await syncFromSupabase();
+    await updateAccountDashboard();
 }
 
 function renderGroupMatches(group) {
@@ -409,27 +561,25 @@ async function loadMatchPronostics(matchId) {
     const container = document.getElementById('prono-list-container'); 
     container.innerHTML = "Chargement...";
     
-    // 1. Récupérer les pronostics du match
-    const { data: pronos, error: pErr } = await supabaseClient.from('pronostics').select('*').eq('match_id', matchId);
-    if (pErr) { container.innerHTML = "Erreur."; return; }
-    if (!pronos || pronos.length === 0) { container.innerHTML = "Aucun pronostic déposé."; return; }
+    const { data: usersData, error: uError } = await supabaseClient.from('users').select('pseudo, avatar');
+    if (uError) { container.innerHTML = "Erreur de chargement des profils."; return; }
     
-    // 2. Récupérer la liste des utilisateurs pour obtenir leurs avatars
-    const { data: users, error: uErr } = await supabaseClient.from('users').select('pseudo, avatar');
-    if (uErr) { container.innerHTML = "Erreur."; return; }
+    const avatarMap = {};
+    if (usersData) {
+        usersData.forEach(u => {
+            avatarMap[u.pseudo] = u.avatar || '⚽';
+        });
+    }
 
-    // 3. Créer un dictionnaire pour associer rapidement le pseudo à l'avatar
-    let userAvatars = {};
-    users.forEach(u => {
-        userAvatars[u.pseudo] = u.avatar || '⚽'; // '⚽' par défaut si vide
-    });
-
-    // 4. Générer le HTML avec le bon avatar
-    container.innerHTML = pronos.map(p => {
-        const playerAvatar = userAvatars[p.pseudo] || '⚽';
+    const { data, error } = await supabaseClient.from('pronostics').select('*').eq('match_id', matchId);
+    if (error) { container.innerHTML = "Erreur."; return; }
+    if (!data || data.length === 0) { container.innerHTML = "Aucun pronostic déposé."; return; }
+    
+    container.innerHTML = data.map(p => {
+        const userAvatar = avatarMap[p.pseudo] || '⚽';
         return `
             <div class="prono-item">
-                <span><span class="profile-avatar">${playerAvatar}</span> ${p.pseudo}</span>
+                <span><span class="profile-avatar">${userAvatar}</span> <strong>${p.pseudo}</strong></span>
                 <span class="prono-val">${p.predicted_score1} - ${p.predicted_score2}</span>
             </div>
         `;
@@ -454,32 +604,81 @@ async function saveUserPronostic() {
 
 async function calculateLeaderboard() {
     const tbody = document.getElementById('leaderboard-tbody'); if (!tbody) return;
+
     const { data: users, error: uErr } = await supabaseClient.from('users').select('pseudo, avatar');
     const { data: pronos, error: pErr } = await supabaseClient.from('pronostics').select('*');
     if (uErr || pErr) return;
 
     let userScores = {};
-    users.forEach(u => { userScores[u.pseudo] = { pseudo: u.pseudo, avatar: u.avatar || '⚽', exacts: 0, partials: 0, totalPoints: 0 }; });
+    users.forEach(u => { 
+        userScores[u.pseudo] = { pseudo: u.pseudo, avatar: u.avatar || '⚽', exacts: 0, diffs: 0, partials: 0, totalPoints: 0 }; 
+    });
 
     pronos.forEach(p => {
         const actS1 = scores[`${p.match_id}-0`], actS2 = scores[`${p.match_id}-1`];
         if (actS1 !== undefined && actS2 !== undefined && userScores[p.pseudo]) {
             const prS1 = p.predicted_score1, prS2 = p.predicted_score2;
-            if (actS1 === prS1 && actS2 === prS2) { userScores[p.pseudo].exacts++; userScores[p.pseudo].totalPoints += 3; } 
-            else if ((actS1 > actS2 && prS1 > prS2) || (actS1 < actS2 && prS1 < prS2) || (actS1 === actS2 && prS1 === prS2)) { userScores[p.pseudo].partials++; userScores[p.pseudo].totalPoints += 1; }
+            
+            const actualSign = Math.sign(actS1 - actS2);
+            const predSign = Math.sign(prS1 - prS2);
+
+            if (actS1 === prS1 && actS2 === prS2) {
+                userScores[p.pseudo].exacts++;
+                userScores[p.pseudo].totalPoints += 5;
+            } else if (actualSign === predSign) {
+                const actualDiff = actS1 - actS2;
+                const predDiff = prS1 - prS2;
+                if (actualDiff === predDiff) {
+                    userScores[p.pseudo].diffs++;
+                    userScores[p.pseudo].totalPoints += 3;
+                } else {
+                    userScores[p.pseudo].partials++;
+                    userScores[p.pseudo].totalPoints += 2;
+                }
+            }
         }
     });
 
-    let rankList = Object.values(userScores).sort((a,b) => b.totalPoints - a.totalPoints || b.exacts - a.exacts);
-    tbody.innerHTML = rankList.map((player, index) => `
-        <tr>
-            <td><strong>#${index + 1}</strong></td>
-            <td><span class="profile-avatar">${player.avatar}</span> ${player.pseudo}</td>
-            <td style="text-align: center; color: var(--text-muted);">${player.exacts}</td>
-            <td style="text-align: center; color: var(--text-muted);">${player.partials}</td>
-            <td style="text-align: right; padding-right: 15px; font-size: 1rem; color: var(--accent);"><strong>${player.totalPoints} pts</strong></td>
-        </tr>
-    `).join('');
+    let rankList = Object.values(userScores).sort((a,b) => {
+        return b.totalPoints - a.totalPoints || b.exacts - a.exacts || b.diffs - a.diffs || b.partials - a.partials;
+    });
+
+    let currentRank = 1;
+    rankList.forEach((player, index) => {
+        if (index > 0) {
+            const prev = rankList[index - 1];
+            const isTie = player.totalPoints === prev.totalPoints && 
+                          player.exacts === prev.exacts && 
+                          player.diffs === prev.diffs && 
+                          player.partials === prev.partials;
+            if (!isTie) {
+                currentRank = index + 1;
+            }
+        }
+        player.rank = currentRank;
+    });
+
+    globalRankList = rankList; 
+
+    const counts = {};
+    rankList.forEach(p => { counts[p.rank] = (counts[p.rank] || 0) + 1; });
+
+    tbody.innerHTML = rankList.map((player) => {
+        const isTie = counts[player.rank] > 1;
+        const stringRank = isTie ? `#${player.rank} <span style="font-size:0.65rem; opacity:0.6; font-weight:normal;">(ex.)</span>` : `#${player.rank}`;
+        return `
+            <tr>
+                <td><strong>${stringRank}</strong></td>
+                <td><span class="profile-avatar">${player.avatar}</span> ${player.pseudo}</td>
+                <td style="text-align: center; color: var(--text-muted); font-weight:600;">${player.exacts}</td>
+                <td style="text-align: center; color: var(--text-muted); font-weight:600;">${player.diffs}</td>
+                <td style="text-align: center; color: var(--text-muted); font-weight:600;">${player.partials}</td>
+                <td style="text-align: right; padding-right: 15px; font-size: 1rem; color: var(--accent);"><strong>${player.totalPoints} pts</strong></td>
+            </tr>
+        `;
+    }).join('');
+    
+    if (document.getElementById('sec-account').classList.contains('active')) updateAccountDashboard();
 }
 
 function calculate() {
@@ -537,22 +736,22 @@ function buildKnockoutTree(standings, allGroupsDone) {
     };
 
     const config = [
-        { t1: getTeam('A', 1), t2: getTeam('B', 1) },        // 16-1 : 2A-2B
-        { t1: getTeam('C', 0), t2: getTeam('F', 1) },        // 16-2 : 1C-2F
-        { t1: getTeam('E', 0), t2: thirdAssignments[0] },    // 16-3 : 1E-3ABCDF
-        { t1: getTeam('F', 0), t2: getTeam('C', 1) },        // 16-4 : 1F-2C
-        { t1: getTeam('E', 1), t2: getTeam('I', 1) },        // 16-5 : 2E-2I
-        { t1: getTeam('I', 0), t2: thirdAssignments[1] },    // 16-6 : 1I-3CDFGH
-        { t1: getTeam('A', 0), t2: thirdAssignments[2] },    // 16-7 : 1A-3CEFHI
-        { t1: getTeam('L', 0), t2: thirdAssignments[3] },    // 16-8 : 1L-3EHIJK
-        { t1: getTeam('G', 0), t2: thirdAssignments[4] },    // 16-9 : 1G-3AEHIJ
-        { t1: getTeam('D', 0), t2: thirdAssignments[5] },    // 16-10 : 1D-3BEFIJ
-        { t1: getTeam('H', 0), t2: getTeam('J', 1) },        // 16-11 : 1H-2J
-        { t1: getTeam('K', 1), t2: getTeam('L', 1) },        // 16-12 : 2K-2L
-        { t1: getTeam('B', 0), t2: thirdAssignments[6] },    // 16-13 : 1B-3EFGIJ
-        { t1: getTeam('D', 1), t2: getTeam('G', 1) },        // 16-14 : 2D-2G
-        { t1: getTeam('J', 0), t2: getTeam('H', 1) },        // 16-15 : 1J-2H
-        { t1: getTeam('K', 0), t2: thirdAssignments[7] }     // 16-16 : 1K-3DEIJL
+        { t1: getTeam('A', 1), t2: getTeam('B', 1) },        
+        { t1: getTeam('C', 0), t2: getTeam('F', 1) },        
+        { t1: getTeam('E', 0), t2: thirdAssignments[0] },    
+        { t1: getTeam('F', 0), t2: getTeam('C', 1) },        
+        { t1: getTeam('E', 1), t2: getTeam('I', 1) },        
+        { t1: getTeam('I', 0), t2: thirdAssignments[1] },    
+        { t1: getTeam('A', 0), t2: thirdAssignments[2] },    
+        { t1: getTeam('L', 0), t2: thirdAssignments[3] },    
+        { t1: getTeam('G', 0), t2: thirdAssignments[4] },    
+        { t1: getTeam('D', 0), t2: thirdAssignments[5] },    
+        { t1: getTeam('H', 0), t2: getTeam('J', 1) },        
+        { t1: getTeam('K', 1), t2: getTeam('L', 1) },        
+        { t1: getTeam('B', 0), t2: thirdAssignments[6] },    
+        { t1: getTeam('D', 1), t2: getTeam('G', 1) },        
+        { t1: getTeam('J', 0), t2: getTeam('H', 1) },        
+        { t1: getTeam('K', 0), t2: thirdAssignments[7] }     
     ];
 
     config.forEach((match, idx) => {
@@ -633,7 +832,7 @@ async function importData() {
         if (type === 'G') {
             for (let l in GROUP_MATCHES) {
                 GROUP_MATCHES[l].forEach((m, idx) => {
-                    if ((m.t1 === t1 && m.t2 === t2) || (m.t1 === t2 && m.t2 === t1)) {
+                    if ((m.t1 === t1 && m.t2 === t2) || (m.t1 === t2 && m.t2 === m.t1)) {
                         matchId = `G-${l}-${idx}`; let rev = m.t1 === t2;
                         scores[`${matchId}-0`] = parseInt(rev ? s2 : s1); scores[`${matchId}-1`] = parseInt(rev ? s1 : s2);
                     }
@@ -647,7 +846,7 @@ async function importData() {
             } else {
                 let count = type === '16' ? 16 : type === '8' ? 8 : type === '4' ? 4 : type === '2' ? 2 : 1;
                 for (let i = 1; i <= count; i++) {
-                    let currT1 = tree[`${type}-${i}-t1`], currT2 = tree[`${type}-${i}-t2__`] || tree[`${type}-${i}-t2`];
+                    let currT1 = tree[`${type}-${i}-t1`], currT2 = tree[`${type}-${i}-t2` || `${type}-${i}-t2__`];
                     if ((currT1 === t1 && currT2 === t2) || (currT1 === t2 && currT2 === t1)) {
                         matchId = `${type}-${i}`; let rev = currT1 === t2;
                         scores[`${matchId}-0`] = parseInt(rev ? s2 : s1); scores[`${matchId}-1`] = parseInt(rev ? s1 : s2);
@@ -678,7 +877,7 @@ function exportData() {
     stages.forEach(stage => {
         for (let i = 1; i <= stage.count; i++) {
             let keyBase = `${stage.label}-${i}`; let t1 = tree[`${keyBase}-t1`], t2 = tree[`${keyBase}-t2`];
-            let s1 = scores[`${keyBase}-0`], s2 = scores[`${keyBase}-1__`] || scores[`${keyBase}-1`];
+            let s1 = scores[`${keyBase}-0`], s2 = scores[`${keyBase}-1`] || scores[`${keyBase}-1__`];
             if (t1 && t2 && s1 !== undefined && s2 !== undefined) {
                 let c1 = CODES[t1], c2 = CODES[t2];
                 if (c1 && c2) {
@@ -694,8 +893,14 @@ function exportData() {
 
 function exportBracketToPNG() {
     const element = document.getElementById('bracket-capture-target');
-    html2canvas(element, { backgroundColor: document.body.classList.contains('dark-mode') ? '#070f24' : '#0b1329', scale: 2 }).then(canvas => {
-        const link = document.createElement('a'); link.download = 'Arbre_2026.png'; link.href = canvas.toDataURL('image/png'); link.click();
+    const isDark = document.body.classList.contains('dark-mode');
+    const bgCanvasColor = isDark ? '#111a2e' : '#f1f5f9'; 
+    
+    html2canvas(element, { backgroundColor: bgCanvasColor, scale: 2 }).then(canvas => {
+        const link = document.createElement('a'); 
+        link.download = 'Arbre_2026.png'; 
+        link.href = canvas.toDataURL('image/png'); 
+        link.click();
     });
 }
 
