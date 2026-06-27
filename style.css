@@ -14,6 +14,7 @@
     --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     --transition: all 0.2s ease;
     --bg-phase-finale: #ffffff; 
+    --header-bg: linear-gradient(120deg, #0f2557 0%, #6c1947 55%, #ff0055 100%);
 }
 
 body.dark-mode {
@@ -27,13 +28,14 @@ body.dark-mode {
     --bg-match: #16224f;
     --shadow: 0 4px 12px rgba(0,0,0,0.3);
     --bg-phase-finale: #111a2e; 
+    --header-bg: #030712;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; transition: background-color var(--transition), border-color var(--transition); }
 body { font-family: 'Montserrat', system-ui, sans-serif; background: var(--bg-body); color: var(--text-main); }
 
 /* HEADER & USER PROFILE */
-.header { background: #030712; color: white; padding: 20px; border-bottom: 4px solid var(--accent); }
+.header { background: var(--header-bg); color: white; padding: 20px; border-bottom: 4px solid var(--accent); }
 .header-inner { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
 .logo-title-row { display: flex; justify-content: space-between; align-items: center; }
 .logo-area h1 { font-size: 1.5rem; font-weight: 800; }
@@ -78,7 +80,12 @@ body { font-family: 'Montserrat', system-ui, sans-serif; background: var(--bg-bo
 .match-list { display: flex; flex-direction: column; gap: 10px; }
 .match-row { padding: 14px; border-radius: 10px; background: var(--bg-match); border: 1px solid var(--border); cursor: pointer; transform: translateZ(0); }
 .match-row:hover { border-color: var(--accent); }
-.match-meta { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 700; }
+.match-meta { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 700; }
+.match-meta-right { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.my-prono-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 10px; font-size: 0.65rem; font-weight: 800; text-transform: none; white-space: nowrap; }
+.my-prono-badge.has { background: rgba(255, 0, 85, 0.1); color: var(--accent); border: 1px solid rgba(255, 0, 85, 0.3); }
+.my-prono-badge.none { background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border); opacity: 0.85; }
 
 .status-badge { padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; text-transform: uppercase; color: white; font-weight: 800; }
 .status-badge.complete { background: #475569; }       
@@ -120,6 +127,13 @@ body { font-family: 'Montserrat', system-ui, sans-serif; background: var(--bg-bo
 /* BRACKETS (PHASE FINALE) */
 .knockout-header-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; }
 .desc { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+
+/* NAVIGATION RAPIDE ENTRE PHASES DE L'ARBRE (JUMP LINKS) */
+.bracket-jumpnav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.jumpnav-label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-right: 2px; }
+.jump-btn { background: var(--bg-match); border: 1px solid var(--border); color: var(--text-main); padding: 7px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: var(--transition); }
+.jump-btn:hover { border-color: var(--accent); color: var(--accent); }
+.jump-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
 .bracket-scroll-wrapper { 
     --bracket-wrapper-bg: #ffffff;          
@@ -186,6 +200,38 @@ body.dark-mode .prono-val { color: #38bdf8; }
 .btn-submit-prono { width: 100%; background: #16a34a; color: white; border: none; padding: 12px; font-weight: 700; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
 .lock-alert-message { background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.2); text-align: center; margin-bottom: 12px; }
 
+/* SECTION PRONOSTICS — EN-TÊTE + BOUTON STATS */
+.prono-section-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+.prono-section-header h3 { font-size: 1rem; }
+.btn-stats-toggle { background: var(--bg-match); border: 1px solid var(--border); color: var(--text-main); padding: 6px 14px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; cursor: pointer; transition: var(--transition); white-space: nowrap; }
+.btn-stats-toggle:hover, .btn-stats-toggle.active { border-color: var(--accent); color: var(--accent); }
+
+/* DIAGRAMME DES TENDANCES DE PRONOSTICS */
+.prono-trends-panel { background: var(--bg-match); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+.trends-title { font-size: 0.7rem; font-weight: 800; margin-bottom: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.trend-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; font-size: 0.78rem; font-weight: 700; }
+.trend-bar-row:last-of-type { margin-bottom: 0; }
+.trend-bar-label { width: 34%; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trend-bar-track { flex: 1; background: var(--border); border-radius: 6px; height: 10px; overflow: hidden; }
+.trend-bar-fill { height: 100%; border-radius: 6px; transition: width 0.5s ease; }
+.trend-bar-pct { width: 36px; flex-shrink: 0; text-align: right; color: var(--text-muted); font-size: 0.72rem; }
+.trends-top-scores { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border); font-size: 0.75rem; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.trends-sub { color: var(--text-muted); font-weight: 600; }
+.trend-score-chip { background: var(--bg-card); border: 1px solid var(--border); padding: 3px 9px; border-radius: 12px; font-weight: 800; }
+.trends-empty { font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 8px; font-weight: 600; }
+
+/* TOASTS — NOTIFICATIONS NON BLOQUANTES (REMPLACENT LES alert() NATIFS) */
+.toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px; max-width: 360px; pointer-events: none; }
+.toast { pointer-events: auto; display: flex; align-items: flex-start; gap: 10px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); border-left: 4px solid var(--text-muted); border-radius: 10px; padding: 12px 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); font-size: 0.85rem; font-weight: 600; line-height: 1.35; opacity: 0; transform: translateX(40px); transition: opacity 0.25s ease, transform 0.25s ease; }
+.toast.show { opacity: 1; transform: translateX(0); }
+.toast-icon { font-size: 1.05rem; flex-shrink: 0; line-height: 1.3; }
+.toast-msg { flex: 1; word-break: break-word; }
+.toast-close { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-weight: 700; font-size: 0.85rem; padding: 0 0 0 4px; flex-shrink: 0; }
+.toast.toast-success { border-left-color: #16a34a; }
+.toast.toast-error { border-left-color: #ef4444; }
+.toast.toast-warning { border-left-color: #e5b842; }
+.toast.toast-info { border-left-color: #2563eb; }
+
 /* DESSIN COMPOSANT ET ÉLÉMENTS DU PODIUM */
 .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin: 30px auto 15px auto; padding: 20px 10px; max-width: 500px; height: 230px; }
 .podium-column { display: flex; flex-direction: column; align-items: center; width: 110px; background: linear-gradient(135deg, var(--primary), #1e293b); border-radius: 12px 12px 6px 6px; position: relative; color: white; font-weight: bold; box-shadow: var(--shadow); transform: translateY(100px); opacity: 0; animation: raisePodium 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
@@ -223,6 +269,12 @@ body.dark-mode .prono-val { color: #38bdf8; }
     .podium-rank-number { font-size: 1.8rem; }
     .standing-table { font-size: 0.78rem; }
     .standing-table td, .standing-table th { padding: 10px 4px; }
+    .my-prono-badge { font-size: 0.6rem; padding: 2px 6px; }
+    .bracket-jumpnav { gap: 6px; }
+    .jump-btn { padding: 6px 12px; font-size: 0.7rem; }
+    .toast-container { left: 10px; right: 10px; bottom: 10px; max-width: none; }
+    .prono-section-header { flex-wrap: wrap; }
+    .trend-bar-label { width: 30%; }
 }
 
 @media (min-width: 769px) {
