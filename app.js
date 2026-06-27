@@ -4,9 +4,10 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 
 // Centralisation globale de la liste d'émojis avatars
 const AVATAR_EMOJIS = [
-  "⚽", "😖", "🏐", "🏀", "🥅", "🏃‍♂️", "🤾", "⛹️","🦁", "🦅", "🦊", "🐺", "🐉", "🐯", "🐼", "🥵",
-  "😎", "🤠", "🥸", "🤯", "🤨", "😏", "😜", "😁", "🤑", "🤙","⚡", "🔥", "💥", "🌪️", "✨",
-  "👑", "🏆", "💎", "⭐", "🥇","🏈", "🥊", "🥋", "🚴‍♂️", "🏄‍♂️", "🏊‍♂️", "⛷️", "🏇","🦒", "🐸", "🐙", "🦈","🤘", "😤", "🤩", "😶‍🌫️", "😈", "🤓", "😬", "🤫",
+  "⚽", "😖", "🏐", "🏀", "🥅", "🏃‍♂️", "🤾", "⛹️","🦁", "🦅", "🦊", "🐺", "🐉", "🐯", "🐼", "🦄",
+  "😎", "🤠", "🥸", "🤯", "🤨", "😏", "😜", "🤙","⚡", "🔥", "💥", "🌪️", "✨",
+  "👑", "🏆", "💎", "⭐", "🥇","🏈", "🥊", "🥋", "🚴‍♂️", "🏄‍♂️", "🏊‍♂️", "⛷️", "🏇",
+  "🐻", "🦍", "🦓", "🦒", "🐸", "🐙", "🦈","🤘", "😤", "🤩", "😶‍🌫️", "😈", "🤓", "😬", "🤫",
   "🌈", "🌟", "💫", "🌋", "🌌", "⚔️", "🛡️", "🎯","💰", "🏅", "🎖️", "📣", "🎉", "🎵", "🎮", "🧩", "🧑‍💻"
 ];
 
@@ -161,6 +162,8 @@ let scores = {};
 let tree = {}; 
 let currentActiveMatchId = null;
 let globalRankList = []; 
+let myPronostics = {};
+let currentMatchPronosticsData = [];
 
 const KNOCKOUT_LINKS = {
     '16-1': { nextId: 1, nextPos: 't1' }, '16-4': { nextId: 1, nextPos: 't2' },
@@ -246,6 +249,32 @@ function populateAvatars() {
     if (accSelect) accSelect.innerHTML = optionsHTML;
 }
 
+/* ============================================================
+   RECHARGEMENT AUTOMATIQUE PÉRIODIQUE — de nombreux visiteurs
+   laissent l'onglet ouvert sans jamais rafraîchir manuellement et
+   passent donc à côté des mises à jour (nouveaux scores, nouvelle
+   version du site...). On recharge donc la page toute seule à
+   intervalle régulier, MAIS on vérifie d'abord que l'utilisateur
+   n'est pas en train de saisir un pronostic ou un champ de compte :
+   si c'est le cas, on retente plus tard au lieu de l'interrompre.
+   ============================================================ */
+const AUTO_RELOAD_INTERVAL_MS = 10 * 60 * 1000; // toutes les 10 minutes
+const AUTO_RELOAD_RETRY_MS = 45 * 1000;         // nouvelle tentative 45s après si l'utilisateur est occupé
+
+function scheduleAutoReload(delay = AUTO_RELOAD_INTERVAL_MS) {
+    setTimeout(() => {
+        const modalOpen = document.getElementById('match-modal')?.style.display === 'flex';
+        const active = document.activeElement;
+        const isTyping = active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName);
+        if (modalOpen || isTyping) {
+            // Utilisateur occupé : on ne coupe rien, on réessaiera bientôt.
+            scheduleAutoReload(AUTO_RELOAD_RETRY_MS);
+        } else {
+            window.location.reload();
+        }
+    }, delay);
+}
+
 async function init() {
     initTheme();
     populateAvatars();
@@ -255,6 +284,8 @@ async function init() {
     renderGroupsSection(['G','H','I','J','K','L'], 'sec-G2');
     renderKnockoutContainers();
     await syncFromSupabase();
+    if (getSession()) showRankReveal();
+    scheduleAutoReload();
 }
 
 function getMatchTimeContext(matchId) {
@@ -268,6 +299,104 @@ function getMatchTimeContext(matchId) {
 function renderStatusBadgeHTML(context) {
     if (context.status === 'complete' || context.status === 'unknown') return `<span class="status-badge complete">Terminé</span>`;
     return `<span class="status-badge live">À venir</span>`;
+}
+
+/* ============================================================
+   TOASTS — remplacent les alert() natifs bloquants par des
+   notifications visuelles non bloquantes, empilées en bas à
+   droite de l'écran et auto-disparaissantes.
+   ============================================================ */
+const TOAST_ICONS = { success: '✅', error: '⚠️', warning: '🔒', info: 'ℹ️' };
+
+function showToast(message, type = 'info', duration = 4500) {
+    const container = document.getElementById('toast-container');
+    if (!container) { console.log(`[${type}] ${message}`); return; }
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <span class="toast-icon">${TOAST_ICONS[type] || TOAST_ICONS.info}</span>
+        <span class="toast-msg">${message}</span>
+        <button class="toast-close" aria-label="Fermer">✕</button>`;
+
+    const dismiss = () => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 250);
+    };
+    toast.querySelector('.toast-close').onclick = dismiss;
+
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(dismiss, duration);
+}
+
+/* ============================================================
+   BADGE "MON PRONO" — petit macaron discret affiché sur chaque
+   carte de match, indiquant le pronostic personnel du joueur
+   connecté (ou son absence). Invisible si personne n'est connecté.
+   ============================================================ */
+function renderMyPronoBadgeHTML(matchId) {
+    const session = getSession();
+    if (!session) return '';
+    const mine = myPronostics[matchId];
+    if (mine) {
+        return `<span class="my-prono-badge has" title="Votre pronostic">🎯 Mon prono : ${mine.s1}-${mine.s2}</span>`;
+    }
+    return `<span class="my-prono-badge none" title="Aucun pronostic déposé">— Pas de prono</span>`;
+}
+
+async function loadMyPronostics() {
+    const session = getSession();
+    if (!session) { myPronostics = {}; return; }
+    const { data, error } = await supabaseClient
+        .from('pronostics')
+        .select('match_id, predicted_score1, predicted_score2')
+        .eq('pseudo', session.pseudo);
+    myPronostics = {};
+    if (!error && data) {
+        data.forEach(p => { myPronostics[p.match_id] = { s1: p.predicted_score1, s2: p.predicted_score2 }; });
+    }
+}
+
+/* ============================================================
+   RÉVÉLATION DU RANG — grand affichage temporaire du rang du
+   joueur connecté (or/argent/bronze pour le podium, couleur
+   neutre sinon), déclenché à chaque connexion et à chaque
+   chargement de page. S'efface automatiquement après quelques
+   secondes, ou immédiatement si l'utilisateur clique dessus.
+   ============================================================ */
+let rankRevealTimer = null;
+
+function showRankReveal() {
+    const session = getSession();
+    if (!session) return;
+    const myStats = globalRankList.find(p => p.pseudo === session.pseudo);
+    if (!myStats) return; // pas encore de classement calculé pour ce joueur
+
+    const overlay = document.getElementById('rank-reveal-overlay');
+    const numberEl = document.getElementById('rank-reveal-number');
+    const pointsEl = document.getElementById('rank-reveal-points');
+    if (!overlay || !numberEl || !pointsEl) return;
+
+    clearTimeout(rankRevealTimer);
+
+    const colorClass = myStats.rank === 1 ? 'rank-gold' : myStats.rank === 2 ? 'rank-silver' : myStats.rank === 3 ? 'rank-bronze' : 'rank-other';
+    numberEl.className = `rank-reveal-number ${colorClass}`;
+    numberEl.innerText = `#${myStats.rank}`;
+    pointsEl.innerText = `${myStats.pseudo} — ${myStats.totalPoints} pt${myStats.totalPoints === 1 ? '' : 's'}`;
+
+    overlay.style.display = 'flex';
+    requestAnimationFrame(() => overlay.classList.add('show'));
+
+    rankRevealTimer = setTimeout(dismissRankReveal, 1500);
+}
+
+function dismissRankReveal() {
+    clearTimeout(rankRevealTimer);
+    const overlay = document.getElementById('rank-reveal-overlay');
+    if (!overlay || overlay.style.display !== 'flex') return;
+    overlay.classList.remove('show');
+    setTimeout(() => { overlay.style.display = 'none'; }, 450);
 }
 
 /* ============================================================
@@ -305,24 +434,30 @@ async function handleAuth() {
     const pseudo = document.getElementById('auth-pseudo').value.trim();
     const code = document.getElementById('auth-code').value.trim();
     const avatar = document.getElementById('auth-avatar').value;
-    if (!pseudo || !code) { alert("Champs vides !"); return; }
+    if (!pseudo || !code) { showToast("Merci de remplir le pseudo et le code secret.", "warning"); return; }
 
     const hashedCode = await hashString(code);
     const { data: user, error } = await supabaseClient.from('users').select('*').eq('pseudo', pseudo).maybeSingle();
-    if (error) { alert("Erreur : " + error.message); return; }
+    if (error) { showToast("Erreur : " + error.message, "error"); return; }
 
     if (user) {
         if (user.code === hashedCode) {
             setSession({ pseudo, code, avatar: user.avatar || '⚽' });
             updateAuthUI();
+            await loadMyPronostics(); calculate();
+            showToast(`Bon retour, ${pseudo} !`, "success");
+            showRankReveal();
             if (document.getElementById('sec-account').classList.contains('active')) await updateAccountDashboard();
-        } else { alert("Code secret erroné."); }
+        } else { showToast("Code secret erroné.", "error"); }
     } else {
         const { error: insError } = await supabaseClient.from('users').insert({ pseudo, code: hashedCode, avatar });
-        if (insError) { alert("Erreur : " + insError.message); } 
+        if (insError) { showToast("Erreur : " + insError.message, "error"); } 
         else {
             setSession({ pseudo, code, avatar });
             updateAuthUI(); await calculateLeaderboard();
+            await loadMyPronostics(); calculate();
+            showToast(`Bienvenue ${pseudo}, votre compte a été créé !`, "success");
+            showRankReveal();
             if (document.getElementById('sec-account').classList.contains('active')) await updateAccountDashboard();
         }
     }
@@ -331,6 +466,8 @@ async function handleAuth() {
 function handleLogout() { 
     clearSession();
     updateAuthUI(); 
+    myPronostics = {};
+    calculate();
     if (document.getElementById('sec-account').classList.contains('active')) updateAccountDashboard();
 }
 
@@ -360,6 +497,7 @@ async function syncFromSupabase() {
                 if (row.tab2 !== null) scores[`${row.id}-tab1`] = row.tab2;
             });
         }
+        await loadMyPronostics();
         calculate(); await calculateLeaderboard();
     } catch (e) { console.error("Sync Error:", e.message); }
 }
@@ -405,7 +543,7 @@ async function updateAccountDashboard() {
         .from('users').select('pseudo, avatar').eq('pseudo', session.pseudo).maybeSingle();
 
     if (userError) {
-        alert("Impossible de charger votre compte (" + userError.message + ").");
+        showToast("Impossible de charger votre compte (" + userError.message + ").", "error");
         return;
     }
 
@@ -487,7 +625,7 @@ async function saveAccountChanges() {
     const newPseudo = document.getElementById('acc-input-pseudo').value.trim();
     const newCode = document.getElementById('acc-input-code').value.trim();
     const newAvatar = document.getElementById('acc-select-avatar').value;
-    if (!newPseudo || !newCode) { alert("Les champs ne peuvent pas être vides."); return; }
+    if (!newPseudo || !newCode) { showToast("Les champs ne peuvent pas être vides.", "warning"); return; }
 
     const saveBtn = document.querySelector('#sec-account .btn.primary');
     const originalBtnText = saveBtn ? saveBtn.innerText : null;
@@ -500,16 +638,16 @@ async function saveAccountChanges() {
         const { data: dbUser, error: fetchError } = await supabaseClient
             .from('users').select('pseudo, code, avatar').eq('pseudo', session.pseudo).maybeSingle();
 
-        if (fetchError) { alert("Erreur réseau lors de la vérification de votre compte : " + fetchError.message); return; }
+        if (fetchError) { showToast("Erreur réseau lors de la vérification de votre compte : " + fetchError.message, "error"); return; }
         if (!dbUser) {
-            alert("Votre compte n'existe plus sur le serveur. Vous allez être déconnecté.");
+            showToast("Votre compte n'existe plus sur le serveur. Vous allez être déconnecté.", "warning");
             handleLogout();
             return;
         }
 
         const oldHashedCode = await hashString(session.code);
         if (dbUser.code !== oldHashedCode) {
-            alert("Votre session locale est désynchronisée avec le serveur (code secret différent). Merci de vous déconnecter puis de vous reconnecter avant de réessayer.");
+            showToast("Votre session locale est désynchronisée avec le serveur (code secret différent). Merci de vous déconnecter puis de vous reconnecter avant de réessayer.", "warning", 7000);
             return;
         }
 
@@ -517,8 +655,8 @@ async function saveAccountChanges() {
         if (newPseudo !== session.pseudo) {
             const { data: existing, error: checkError } = await supabaseClient
                 .from('users').select('pseudo').eq('pseudo', newPseudo).maybeSingle();
-            if (checkError) { alert("Erreur lors de la vérification du pseudo : " + checkError.message); return; }
-            if (existing) { alert("Ce pseudo est déjà utilisé par un autre joueur."); return; }
+            if (checkError) { showToast("Erreur lors de la vérification du pseudo : " + checkError.message, "error"); return; }
+            if (existing) { showToast("Ce pseudo est déjà utilisé par un autre joueur.", "error"); return; }
         }
 
         const newHashedCode = await hashString(newCode);
@@ -535,12 +673,12 @@ async function saveAccountChanges() {
             .select();
 
         if (updateError) {
-            if (updateError.code === '23505') alert("Ce pseudo est déjà pris par un autre joueur.");
-            else alert("Erreur lors de la mise à jour : " + updateError.message);
+            if (updateError.code === '23505') showToast("Ce pseudo est déjà pris par un autre joueur.", "error");
+            else showToast("Erreur lors de la mise à jour : " + updateError.message, "error");
             return;
         }
         if (!updatedRows || updatedRows.length === 0) {
-            alert("La mise à jour n'a pas pu être appliquée (aucune ligne modifiée côté serveur). C'est très probablement un problème de droits d'accès Supabase : vérifiez qu'une policy RLS 'UPDATE' autorisant le rôle anon existe bien sur la table 'users'.");
+            showToast("La mise à jour n'a pas pu être appliquée (aucune ligne modifiée côté serveur). C'est très probablement un problème de droits d'accès Supabase : vérifiez qu'une policy RLS 'UPDATE' autorisant le rôle anon existe bien sur la table 'users'.", "error", 8000);
             return;
         }
 
@@ -555,14 +693,14 @@ async function saveAccountChanges() {
                 .select();
 
             if (pronoError) {
-                alert("Votre profil a bien été mis à jour, mais la synchronisation de vos pronostics existants a échoué : " + pronoError.message + "\nContactez l'administrateur si vos points semblent incorrects par la suite.");
+                showToast("Votre profil a bien été mis à jour, mais la synchronisation de vos pronostics existants a échoué : " + pronoError.message + ". Contactez l'administrateur si vos points semblent incorrects par la suite.", "error", 8000);
             } else if (updatedPronos && updatedPronos.length === 0) {
                 // 0 ligne modifiée n'est pas forcément une erreur (le joueur n'a peut-être
                 // encore déposé aucun pronostic) — mais si on sait qu'il en a, c'est suspect.
                 const { count } = await supabaseClient
                     .from('pronostics').select('*', { count: 'exact', head: true }).eq('pseudo', session.pseudo);
                 if (count && count > 0) {
-                    alert("Votre profil a été mis à jour, mais aucun pronostic n'a pu être resynchronisé (probablement une policy RLS 'UPDATE' manquante sur la table 'pronostics'). Vos anciens pronostics restent associés à votre ancien pseudo/code — contactez l'administrateur.");
+                    showToast("Votre profil a été mis à jour, mais aucun pronostic n'a pu être resynchronisé (probablement une policy RLS 'UPDATE' manquante sur la table 'pronostics'). Vos anciens pronostics restent associés à votre ancien pseudo/code — contactez l'administrateur.", "warning", 8000);
                 }
             }
         }
@@ -571,7 +709,7 @@ async function saveAccountChanges() {
         // réelle de l'écriture en base (updatedRows.length > 0 ci-dessus).
         setSession({ pseudo: newPseudo, code: newCode, avatar: newAvatar });
 
-        alert("Compte mis à jour avec succès !");
+        showToast("Compte mis à jour avec succès !", "success");
         updateAuthUI();
         await syncFromSupabase();
         await updateAccountDashboard();
@@ -588,7 +726,10 @@ function renderGroupMatches(group) {
         const ctx = getMatchTimeContext(keyBase);
         list.innerHTML += `
             <div class="match-row" onclick="openMatchModal('${keyBase}', '${m.t1}', '${m.t2}')">
-                <div class="match-meta"><span>${ctx.text || 'Phase de groupes'}</span> ${renderStatusBadgeHTML(ctx)}</div>
+                <div class="match-meta">
+                    <span>${ctx.text || 'Phase de groupes'}</span>
+                    <div class="match-meta-right">${renderStatusBadgeHTML(ctx)}${renderMyPronoBadgeHTML(keyBase)}</div>
+                </div>
                 <div class="match-teams">
                     <span class="team-name">${formatTeamName(m.t1)}</span>
                     <div class="score-box-view">${s1} : ${s2}</div>
@@ -616,7 +757,10 @@ function setupStageCards(id, label, titleText) {
         const ctx = getMatchTimeContext(keyBase);
         target.innerHTML += `
         <div class="match-row" onclick="openMatchModal('${keyBase}', tree['${keyBase}-t1'], tree['${keyBase}-t2'])">
-            <div class="match-meta"><span>${titleText} - #${i}</span> ${renderStatusBadgeHTML(ctx)}</div>
+            <div class="match-meta">
+                <span>${titleText} - #${i}</span>
+                <div class="match-meta-right">${renderStatusBadgeHTML(ctx)}${renderMyPronoBadgeHTML(keyBase)}</div>
+            </div>
             <div class="match-teams">
                 <span id="${keyBase}-t1" class="team-name">...</span>
                 <div class="score-box-view">${s1} : ${s2}</div>
@@ -652,6 +796,14 @@ async function openMatchModal(matchId, t1, t2) {
         pronoForm.style.display = 'block'; lockAlert.style.display = 'none';
         document.getElementById('prono-s1').value = ''; document.getElementById('prono-s2').value = '';
     }
+
+    // Réinitialisation du panneau de tendances (il sera regénéré à la demande, sur clic).
+    currentMatchPronosticsData = [];
+    const trendsPanel = document.getElementById('prono-trends-panel');
+    if (trendsPanel) trendsPanel.style.display = 'none';
+    const statsBtn = document.getElementById('stats-toggle-btn');
+    if (statsBtn) statsBtn.classList.remove('active');
+
     document.getElementById('match-modal').style.display = 'flex'; await loadMatchPronostics(matchId);
 }
 
@@ -667,6 +819,11 @@ async function loadMatchPronostics(matchId) {
 
     const { data, error } = await supabaseClient.from('pronostics').select('*').eq('match_id', matchId);
     if (error) { container.innerHTML = "Erreur."; return; }
+
+    // On garde les pronostics en mémoire pour pouvoir générer le diagramme de
+    // tendances instantanément, sans nouvel aller-retour réseau au clic.
+    currentMatchPronosticsData = data || [];
+
     if (!data || data.length === 0) { container.innerHTML = "Aucun pronostic déposé."; return; }
     
     container.innerHTML = data.map(p => {
@@ -679,13 +836,78 @@ async function loadMatchPronostics(matchId) {
     }).join('');
 }
 
+/* ============================================================
+   DIAGRAMME DE TENDANCES — montre, pour le match actif, comment
+   la ligue de pronostiqueurs se répartit entre victoire équipe 1,
+   match nul, victoire équipe 2, ainsi que les scores les plus
+   pronostiqués. Généré à la demande (bouton "📈 Tendances").
+   ============================================================ */
+function toggleProTrends() {
+    const panel = document.getElementById('prono-trends-panel');
+    const btn = document.getElementById('stats-toggle-btn');
+    if (!panel) return;
+    const isHidden = panel.style.display === 'none' || !panel.style.display;
+    if (isHidden) {
+        renderProTrendsChart();
+        panel.style.display = 'block';
+        if (btn) btn.classList.add('active');
+    } else {
+        panel.style.display = 'none';
+        if (btn) btn.classList.remove('active');
+    }
+}
+
+function renderProTrendsChart() {
+    const panel = document.getElementById('prono-trends-panel');
+    if (!panel) return;
+    const data = currentMatchPronosticsData || [];
+
+    if (data.length === 0) {
+        panel.innerHTML = `<p class="trends-empty">Pas encore assez de pronostics pour dégager une tendance.</p>`;
+        return;
+    }
+
+    let winT1 = 0, draw = 0, winT2 = 0;
+    const scoreFreq = {};
+    data.forEach(p => {
+        const s1 = p.predicted_score1, s2 = p.predicted_score2;
+        if (s1 > s2) winT1++; else if (s2 > s1) winT2++; else draw++;
+        const key = `${s1}-${s2}`;
+        scoreFreq[key] = (scoreFreq[key] || 0) + 1;
+    });
+
+    const total = data.length;
+    const pct = n => Math.round((n / total) * 100);
+    const topScores = Object.entries(scoreFreq).sort((a, b) => b[1] - a[1]).slice(0, 3);
+
+    const t1Name = (document.getElementById('modal-t1-name').innerText || 'Équipe 1').trim();
+    const t2Name = (document.getElementById('modal-t2-name').innerText || 'Équipe 2').trim();
+
+    const bar = (label, count, color) => `
+        <div class="trend-bar-row">
+            <span class="trend-bar-label" title="${label}">${label}</span>
+            <div class="trend-bar-track"><div class="trend-bar-fill" style="width:${pct(count)}%; background:${color};"></div></div>
+            <span class="trend-bar-pct">${pct(count)}%</span>
+        </div>`;
+
+    panel.innerHTML = `
+        <div class="trends-title">Tendances sur ${total} pronostic${total > 1 ? 's' : ''}</div>
+        ${bar(t1Name, winT1, 'var(--primary)')}
+        ${bar('Match nul', draw, '#94a3b8')}
+        ${bar(t2Name, winT2, 'var(--accent)')}
+        <div class="trends-top-scores">
+            <span class="trends-sub">Scores les plus pronostiqués :</span>
+            ${topScores.map(([score, c]) => `<span class="trend-score-chip">${score} (${c}x)</span>`).join('')}
+        </div>`;
+}
+
 async function saveUserPronostic() {
     const session = getSession();
     const s1 = document.getElementById('prono-s1').value.trim(), s2 = document.getElementById('prono-s2').value.trim();
-    if (!session) return; if (s1 === '' || s2 === '') { alert("Score invalide."); return; }
+    if (!session) return; if (s1 === '' || s2 === '') { showToast("Merci d'indiquer un score pour les deux équipes.", "warning"); return; }
 
     const ctx = getMatchTimeContext(currentActiveMatchId);
-    if (ctx.status === 'complete' || (ctx.iso && new Date() >= new Date(ctx.iso))) { alert("Verrouillé !"); return; }
+    if (ctx.status === 'complete' || (ctx.iso && new Date() >= new Date(ctx.iso))) { showToast("Ce match est verrouillé : il a débuté ou est déjà terminé.", "warning"); return; }
 
     const hashedUserCode = await hashString(session.code);
 
@@ -693,9 +915,10 @@ async function saveUserPronostic() {
         match_id: currentActiveMatchId, pseudo: session.pseudo, predicted_score1: parseInt(s1), predicted_score2: parseInt(s2), user_code: hashedUserCode, updated_at: new Date()
     }, { onConflict: 'match_id, pseudo' });
 
-    if (error) { alert("Erreur d'envoi : " + error.message); } 
-    else { alert("Pronostic sauvegardé !"); closeModal(); await syncFromSupabase(); }
+    if (error) { showToast("Erreur d'envoi : " + error.message, "error"); } 
+    else { showToast("Pronostic sauvegardé !", "success"); closeModal(); await syncFromSupabase(); }
 }
+
 
 async function calculateLeaderboard() {
     const tbody = document.getElementById('leaderboard-tbody'); if (!tbody) return;
@@ -788,8 +1011,9 @@ async function calculateLeaderboard() {
     tbody.innerHTML = rankList.map((player) => {
         const isTie = counts[player.rank] > 1;
         const stringRank = isTie ? `#${player.rank} <span style="font-size:0.65rem; opacity:0.6; font-weight:normal;">(ex.)</span>` : `#${player.rank}`;
+        const rankClass = player.rank === 1 ? 'rank-row-gold' : player.rank === 2 ? 'rank-row-silver' : player.rank === 3 ? 'rank-row-bronze' : '';
         return `
-            <tr>
+            <tr class="${rankClass}">
                 <td><strong>${stringRank}</strong></td>
                 <td><span class="profile-avatar">${player.avatar}</span> ${player.pseudo}</td>
                 <td style="text-align: center; color: var(--text-muted); font-weight:600;">${player.exacts}</td>
@@ -915,7 +1139,7 @@ function updateKnockoutUI() {
             if (rowEl) {
                 rowEl.querySelector('.score-box-view').innerText = `${s1} : ${s2}`;
                 const ctx = getMatchTimeContext(keyBase);
-                rowEl.querySelector('.match-meta').innerHTML = `<span>${stage.text} - #${i}</span> ${renderStatusBadgeHTML(ctx)}`;
+                rowEl.querySelector('.match-meta').innerHTML = `<span>${stage.text} - #${i}</span><div class="match-meta-right">${renderStatusBadgeHTML(ctx)}${renderMyPronoBadgeHTML(keyBase)}</div>`;
                 rowEl.onclick = () => openMatchModal(keyBase, t1Name, t2Name);
             }
         });
@@ -926,7 +1150,7 @@ function updateKnockoutUI() {
 async function importData() {
     const codeInput = document.getElementById('import-code-input').value.trim();
     const { data: config, error: configError } = await supabaseClient.from('app_config').select('value').eq('key', 'import_code').maybeSingle();
-    if (configError || !config || config.value !== codeInput) { alert("Code admin incorrect."); return; }
+    if (configError || !config || config.value !== codeInput) { showToast("Code admin incorrect.", "error"); return; }
 
     let txt = document.getElementById('io-text').value.trim(); if (!txt) return;
     let lines = txt.split("\n"), upsertPayloads = [];
@@ -971,7 +1195,7 @@ async function importData() {
     }
     if(upsertPayloads.length > 0) {
         const { error } = await supabaseClient.from('matches').upsert(upsertPayloads);
-        if (!error) { alert("Scores synchronisés !"); await syncFromSupabase(); }
+        if (!error) { showToast("Scores synchronisés !", "success"); await syncFromSupabase(); }
     }
 }
 
@@ -999,6 +1223,64 @@ function exportData() {
         }
     });
     document.getElementById('io-text').value = out.join("\n");
+}
+
+/* ============================================================
+   NAVIGATION RAPIDE DANS L'ARBRE — fait défiler horizontalement
+   le conteneur du bracket pour amener la colonne cible
+   (seizièmes, huitièmes, ...) bien au centre de la vue.
+   ============================================================ */
+function scrollToBracketColumn(targetId, btnEl, smooth = true) {
+    document.querySelectorAll('.jump-btn').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+
+    const wrapper = document.querySelector('.bracket-scroll-wrapper');
+    const target = document.getElementById(targetId);
+    if (!wrapper || !target) return;
+
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const delta = (targetRect.left + targetRect.width / 2) - (wrapperRect.left + wrapperRect.width / 2);
+    wrapper.scrollTo({ left: wrapper.scrollLeft + delta, behavior: smooth ? 'smooth' : 'auto' });
+}
+
+/* ============================================================
+   CENTRAGE AUTOMATIQUE SUR LA PHASE EN COURS — quand on ouvre
+   l'onglet "Phase Finale", on détecte la première phase dont
+   tous les matchs ne sont pas encore terminés (16e, 8e, quarts,
+   demies, finale) et on centre directement l'arbre dessus, au
+   lieu de toujours repartir des seizièmes.
+   ============================================================ */
+const BRACKET_STAGE_SEQUENCE = [
+    { label: '16', count: 16, colId: 'col-16' },
+    { label: '8', count: 8, colId: 'col-8' },
+    { label: '4', count: 4, colId: 'col-quarts' },
+    { label: '2', count: 2, colId: 'col-demis' },
+    { label: 'F', count: 1, colId: 'col-final' }
+];
+
+function isStageComplete(label, count) {
+    for (let i = 1; i <= count; i++) {
+        if (scores[`${label}-${i}-0`] === undefined || scores[`${label}-${i}-1`] === undefined) return false;
+    }
+    return true;
+}
+
+function getCurrentBracketColId() {
+    for (const stage of BRACKET_STAGE_SEQUENCE) {
+        if (!isStageComplete(stage.label, stage.count)) return stage.colId;
+    }
+    return 'col-final'; // tournoi entièrement terminé : on reste sur la finale
+}
+
+function centerBracketOnCurrentStage() {
+    // Léger délai pour laisser le navigateur appliquer le display:block
+    // de la section avant de mesurer les positions à centrer.
+    setTimeout(() => {
+        const colId = getCurrentBracketColId();
+        const btn = document.querySelector(`.jump-btn[data-target="${colId}"]`);
+        scrollToBracketColumn(colId, btn, false);
+    }, 30);
 }
 
 function exportBracketToPNG() {

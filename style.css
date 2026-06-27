@@ -15,6 +15,8 @@
     --transition: all 0.2s ease;
     --bg-phase-finale: #ffffff; 
     --header-bg: linear-gradient(120deg, #0f2557 0%, #6c1947 55%, #ff0055 100%);
+    --silver: #aab4c0;
+    --bronze: #cd7f32;
 }
 
 body.dark-mode {
@@ -72,7 +74,9 @@ body { font-family: 'Montserrat', system-ui, sans-serif; background: var(--bg-bo
 .standing-table th { text-align: left; color: var(--text-muted); padding: 10px 8px; font-size: 0.7rem; text-transform: uppercase; font-weight: 700; border-bottom: 2px solid var(--border); }
 .standing-table td { padding: 12px 8px; border-bottom: 1px solid var(--border); font-weight: 600; }
 .standing-table tr.qualified td { background: rgba(229, 184, 66, 0.06); border-left: 3px solid var(--gold); }
-.leaderboard-table tr:nth-child(1) td { color: var(--gold); font-weight: 800; }
+.leaderboard-table tr.rank-row-gold td { color: var(--gold); font-weight: 800; }
+.leaderboard-table tr.rank-row-silver td { color: var(--silver); font-weight: 800; }
+.leaderboard-table tr.rank-row-bronze td { color: var(--bronze); font-weight: 800; }
 
 /* CARDS MATCHS & STATUTS BADGES */
 .group-grid.active { display: grid; grid-template-columns: 1fr; gap: 20px; }
@@ -232,6 +236,31 @@ body.dark-mode .prono-val { color: #38bdf8; }
 .toast.toast-warning { border-left-color: #e5b842; }
 .toast.toast-info { border-left-color: #2563eb; }
 
+@media (min-width: 769px) {
+    .toast-container { max-width: 460px; gap: 14px; bottom: 30px; right: 30px; }
+    .toast { font-size: 1rem; padding: 18px 22px; border-radius: 14px; gap: 16px; border-left-width: 5px; box-shadow: 0 14px 36px rgba(0,0,0,0.22); }
+    .toast-icon { font-size: 1.4rem; }
+    .toast-close { font-size: 1.05rem; }
+}
+
+/* RÉVÉLATION DU RANG — grand affichage du classement personnel,
+   déclenché à chaque connexion et à chaque chargement de page,
+   qui s'estompe ensuite pour laisser place au site. */
+.rank-reveal-overlay { position: fixed; inset: 0; background: rgba(7, 15, 36, 0.78); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 100000; opacity: 0; transition: opacity 0.45s ease; cursor: pointer; padding: 20px; }
+.rank-reveal-overlay.show { opacity: 1; }
+.rank-reveal-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 46px 60px; text-align: center; box-shadow: 0 24px 70px rgba(0,0,0,0.45); transform: scale(0.55); opacity: 0; transition: transform 0.5s cubic-bezier(.34,1.56,.64,1), opacity 0.4s ease; cursor: default; }
+.rank-reveal-overlay.show .rank-reveal-card { transform: scale(1); opacity: 1; }
+.rank-reveal-label { font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.09em; color: var(--text-muted); margin-bottom: 8px; }
+.rank-reveal-number { font-size: 5.5rem; font-weight: 900; line-height: 1; margin: 4px 0; }
+.rank-reveal-overlay.show .rank-reveal-number { animation: rankPulse 1s cubic-bezier(.34,1.56,.64,1) 0.15s; }
+.rank-reveal-points { font-size: 1.05rem; font-weight: 700; color: var(--text-muted); margin-top: 10px; }
+.rank-reveal-number.rank-gold { color: var(--gold); text-shadow: 0 0 36px rgba(229, 184, 66, 0.55); }
+.rank-reveal-number.rank-silver { color: var(--silver); text-shadow: 0 0 36px rgba(170, 180, 192, 0.55); }
+.rank-reveal-number.rank-bronze { color: var(--bronze); text-shadow: 0 0 36px rgba(205, 127, 50, 0.55); }
+.rank-reveal-number.rank-other { color: var(--text-main); }
+
+@keyframes rankPulse { 0% { transform: scale(0.6); } 55% { transform: scale(1.15); } 100% { transform: scale(1); } }
+
 /* DESSIN COMPOSANT ET ÉLÉMENTS DU PODIUM */
 .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin: 30px auto 15px auto; padding: 20px 10px; max-width: 500px; height: 230px; }
 .podium-column { display: flex; flex-direction: column; align-items: center; width: 110px; background: linear-gradient(135deg, var(--primary), #1e293b); border-radius: 12px 12px 6px 6px; position: relative; color: white; font-weight: bold; box-shadow: var(--shadow); transform: translateY(100px); opacity: 0; animation: raisePodium 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
@@ -275,6 +304,10 @@ body.dark-mode .prono-val { color: #38bdf8; }
     .toast-container { left: 10px; right: 10px; bottom: 10px; max-width: none; }
     .prono-section-header { flex-wrap: wrap; }
     .trend-bar-label { width: 30%; }
+    .rank-reveal-card { padding: 32px 28px; border-radius: 18px; }
+    .rank-reveal-number { font-size: 3.4rem; }
+    .rank-reveal-label { font-size: 0.7rem; }
+    .rank-reveal-points { font-size: 0.9rem; }
 }
 
 @media (min-width: 769px) {

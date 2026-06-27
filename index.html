@@ -41,7 +41,7 @@
 <nav class="tabs">
     <button class="tab active" onclick="showSection('G1', this)">Groupes A–F</button>
     <button class="tab" onclick="showSection('G2', this)">Groupes G–L</button>
-    <button class="tab" onclick="showSection('KO', this)">Phase Finale</button>
+    <button class="tab" onclick="showSection('KO', this); centerBracketOnCurrentStage();">Phase Finale</button>
     <button class="tab" onclick="showSection('LEADERBOARD', this)">🏆 Classement</button>
     <button class="tab" onclick="showSection('account', this); updateAccountDashboard();">👤 Mon Compte</button>
     <button class="tab tab-desktop-only" onclick="showSection('IO', this)">Console Admin</button>
@@ -140,28 +140,37 @@
                     <h2>Arbre Éliminatoire Direct</h2>
                     <p class="desc">Consultez l'arbre ou cliquez sur un match pour voir les pronostics déposés.</p>
                 </div>
-                <button class="btn secondary" onclick="exportBracketToPNG()">📸 Capturer l'arbre</button>
+                <button class="btn secondary" onclick="exportBracketToPNG()">📸 Enregistrer l'arbre</button>
+            </div>
+
+            <div class="bracket-jumpnav" id="bracket-jumpnav">
+                <span class="jumpnav-label">Aller à :</span>
+                <button class="jump-btn" data-target="col-16" onclick="scrollToBracketColumn('col-16', this)">1/16</button>
+                <button class="jump-btn" data-target="col-8" onclick="scrollToBracketColumn('col-8', this)">1/8</button>
+                <button class="jump-btn" data-target="col-quarts" onclick="scrollToBracketColumn('col-quarts', this)">Quarts</button>
+                <button class="jump-btn" data-target="col-demis" onclick="scrollToBracketColumn('col-demis', this)">Demies</button>
+                <button class="jump-btn" data-target="col-final" onclick="scrollToBracketColumn('col-final', this)">🏆 Finale</button>
             </div>
             
             <div class="bracket-scroll-wrapper">
                 <div class="bracket-container" id="bracket-capture-target">
-                    <div class="bracket-column">
+                    <div class="bracket-column" id="col-16">
                         <div class="column-title">Seizièmes</div>
                         <div id="box-16es" class="column-match-list"></div>
                     </div>
-                    <div class="bracket-column">
+                    <div class="bracket-column" id="col-8">
                         <div class="column-title">Huitièmes</div>
                         <div id="box-8es" class="column-match-list"></div>
                     </div>
-                    <div class="bracket-column">
+                    <div class="bracket-column" id="col-quarts">
                         <div class="column-title">Quarts</div>
                         <div id="box-quarts" class="column-match-list"></div>
                     </div>
-                    <div class="bracket-column">
+                    <div class="bracket-column" id="col-demis">
                         <div class="column-title">Demi-finales</div>
                         <div id="box-demis" class="column-match-list"></div>
                     </div>
-                    <div class="bracket-column final-column">
+                    <div class="bracket-column final-column" id="col-final">
                         <div class="final-section-wrapper">
                             <div class="column-title gold-title">Grande Finale</div>
                             <div id="box-finale"></div>
@@ -216,7 +225,11 @@
             <div id="modal-tab-val" class="modal-tab-badge"></div>
 
             <div class="pronostics-section">
-                <h3>📊 Pronostics de la communauté</h3>
+                <div class="prono-section-header">
+                    <h3>📊 Pronostics de la communauté</h3>
+                    <button class="btn-stats-toggle" id="stats-toggle-btn" onclick="toggleProTrends()">📈 Tendances</button>
+                </div>
+                <div id="prono-trends-panel" class="prono-trends-panel" style="display:none;"></div>
                 <div id="prono-list-container" class="prono-list">Chargement...</div>
                 
                 <div id="modal-lock-msg" class="lock-alert-message" style="display:none;"></div>
@@ -234,6 +247,16 @@
         </div>
     </div>
 </div>
+
+<div id="rank-reveal-overlay" class="rank-reveal-overlay" onclick="dismissRankReveal()">
+    <div class="rank-reveal-card">
+        <div class="rank-reveal-label">Votre rang actuel</div>
+        <div id="rank-reveal-number" class="rank-reveal-number">#--</div>
+        <div id="rank-reveal-points" class="rank-reveal-points"></div>
+    </div>
+</div>
+
+<div id="toast-container" class="toast-container" aria-live="polite"></div>
 
 <script src="app.js"></script>
 </body>
