@@ -4,15 +4,14 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 
 // Centralisation globale de la liste d'émojis avatars
 const AVATAR_EMOJIS = [
-    "⚽", "🏐", "🏀", "🥅", "🏃‍♂️", "🤾", "⛹️", "🦁", "🦅", "🦊", "🐺", "🐉", 
-    "🐯", "🐼", "🦄", "😎", "🤠", "🥸", "🤯", "🤨", "😏", "😜", "🤙", "⚡", 
-    "🔥", "💥", "🌪️", "✨", "👑", "🏆", "💎", "⭐", "🥇"
+  "⚽", "🏐", "🏀", "🥅", "🏃‍♂️", "🤾", "⛹️","🦁", "🦅", "🦊", "🐺", "🐉", "🐯", "🐼", "🦄",
+  "😎", "🤠", "🥸", "🤯", "🤨", "😏", "😜", "🤙","⚡", "🔥", "💥", "🌪️", "✨",
+  "👑", "🏆", "💎", "⭐", "🥇","🏈", "🥊", "🥋", "🚴‍♂️", "🏄‍♂️", "🏊‍♂️", "⛷️", "🏇",
+  "🐻", "🦍", "🦓", "🦒", "🐸", "🐙", "🦈","🤘", "😤", "🤩", "😶‍🌫️", "😈", "🤓", "😬", "🤫",
+  "🌈", "🌟", "💫", "🌋", "🌌", "⚔️", "🛡️", "🎯","💰", "🏅", "🎖️", "📣", "🎉", "🎵", "🎮", "🧩", "🧑‍💻"
 ];
 
 const MATCH_SCHEDULE = {
-    // ============================
-    // PHASE DE GROUPES (11 → 24 juin)
-    // ============================
     "G-A-1": { display: null, iso: null }, "G-A-2": { display: null, iso: null },
     "G-B-1": { display: null, iso: null }, "G-B-2": { display: null, iso: null }, "G-B-3": { display: null, iso: null },
     "G-C-1": { display: null, iso: null }, "G-C-2": { display: null, iso: null },
@@ -26,7 +25,6 @@ const MATCH_SCHEDULE = {
     "G-K-1": { display: null, iso: null }, "G-K-2": { display: null, iso: null }, "G-K-3": { display: null, iso: null },
     "G-L-1": { display: null, iso: null }, "G-L-2": { display: null, iso: null }, "G-L-3": { display: null, iso: null },
 
-    // 25 juin
     "G-E-4": { display: "Jeudi 25 Juin – 22:00", iso: "2026-06-25T22:00:00+02:00" },
     "G-E-5": { display: "Jeudi 25 Juin – 22:00", iso: "2026-06-25T22:00:00+02:00" },
     "G-F-4": { display: "Vendredi 26 Juin – 01:00", iso: "2026-06-26T01:00:00+02:00" },
@@ -35,7 +33,6 @@ const MATCH_SCHEDULE = {
     "G-D-4": { display: "Vendredi 26 Juin – 04:00", iso: "2026-06-26T04:00:00+02:00" },
     "G-D-5": { display: "Samedi 26 Juin – 04:00", iso: "2026-06-26T04:00:00+02:00" },
 
-    // 26 juin
     "G-I-4": { display: "Vendredi 26 Juin – 21:00", iso: "2026-06-26T21:00:00+02:00" },
     "G-I-5": { display: "Vendredi 26 Juin – 21:00", iso: "2026-06-26T21:00:00+02:00" },
     "G-H-4": { display: "Samedi 27 Juin – 02:00", iso: "2026-06-27T02:00:00+02:00" },
@@ -43,7 +40,6 @@ const MATCH_SCHEDULE = {
     "G-G-4": { display: "Samedi 27 Juin – 05:00", iso: "2026-07-27T05:00:00+02:00" },
     "G-G-5": { display: "Samedi 27 Juin – 05:00", iso: "2026-07-27T05:00:00+02:00" },
     
-    // 27 juin
     "G-L-4": { display: "Samedi 27 Juin – 23:00", iso: "2026-06-27T23:00:00+02:00" },
     "G-L-5": { display: "Samedi 27 Juin – 23:00", iso: "2026-06-27T23:00:00+02:00" },
     "G-K-4": { display: "Dimanche 28 Juin – 01:30", iso: "2026-06-28T01:30:00+02:00" },
@@ -51,7 +47,6 @@ const MATCH_SCHEDULE = {
     "G-J-4": { display: "Dimanche 28 Juin – 04:00", iso: "2026-06-28T04:00:00+02:00" },
     "G-J-5": { display: "Dimanche 28 Juin – 04:00", iso: "2026-06-28T04:00:00+02:00" },
 
-    // 16es de finale
     "16-1": { display: "Dimanche 28 Juin – 21:00", iso: "2026-06-28T21:00:00+02:00" },
     "16-2": { display: "Lundi 29 Juin – 19:00", iso: "2026-06-29T19:00:00+02:00" },
     "16-3": { display: "Lundi 29 Juin – 22:30", iso: "2026-06-29T22:30:00+02:00" },
@@ -69,7 +64,6 @@ const MATCH_SCHEDULE = {
     "16-15": { display: "Samedi 4 Juillet – 00:00", iso: "2026-07-04T00:00:00+02:00" },
     "16-16": { display: "Samedi 4 Juillet – 03:30", iso: "2026-07-04T03:30:00+02:00" },
 
-    // Huitièmes
     "8-1": { display: "Samedi 4 Juillet – 19:00", iso: "2026-07-04T19:00:00+02:00" },
     "8-2": { display: "Samedi 4 Juillet – 23:00", iso: "2026-07-04T23:00:00+02:00" },
     "8-3": { display: "Dimanche 5 Juillet – 22:00", iso: "2026-07-05T22:00:00+02:00" },
@@ -79,20 +73,15 @@ const MATCH_SCHEDULE = {
     "8-7": { display: "Mardi 7 Juillet – 18:00", iso: "2026-07-07T18:00:00+02:00" },
     "8-8": { display: "Mardi 7 Juillet – 22:00", iso: "2026-07-22T22:00:00+02:00" },
 
-    // Quarts
     "4-1": { display: "Jeudi 9 Juillet – 22:00", iso: "2026-07-09T22:00:00+02:00" },
     "4-2": { display: "Vendredi 10 Juillet – 21:00", iso: "2026-07-10T21:00:00+02:00" },
     "4-3": { display: "Samedi 11 Juillet – 23:00", iso: "2026-07-11T23:00:00+02:00" },
     "4-4": { display: "Dimanche 12 Juillet – 03:00", iso: "2026-07-12T03:00:00+02:00" },
 
-    // Demi-finales
     "2-1": { display: "Mardi 14 Juillet – 21:00", iso: "2026-07-14T21:00:00+02:00" },
     "2-2": { display: "Mercredi 15 Juillet – 21:00", iso: "2026-07-15T21:00:00+02:00" },
 
-    // Petite Finale
     "3-1": { display: "Samedi 18 Juillet – 23:00", iso: "2026-07-18T23:00:00+02:00" },
-
-    // Finale
     "F-1": { display: "Dimanche 19 Juillet – 21:00", iso: "2026-07-19T21:00:00+02:00" }
 };
 
@@ -145,42 +134,22 @@ const STAGE_ORDERS = {
 };
 
 const KNOCKOUT_PLACEHOLDERS = {
-    "16-1-t1": "2A", "16-1-t2": "2B",
-    "16-2-t1": "1C", "16-2-t2": "2F",
-    "16-3-t1": "1E", "16-3-t2": "3ABCDF",
-    "16-4-t1": "1F", "16-4-t2": "2C",
-    "16-5-t1": "2E", "16-5-t2": "2I",
-    "16-6-t1": "1I", "16-6-t2": "3CDFGH",
-    "16-7-t1": "1A", "16-7-t2": "3CEFHI",
-    "16-8-t1": "1L", "16-8-t2": "3EHIJK",
-    "16-9-t1": "1G", "16-9-t2": "3AEHIJ",
-    "16-10-t1": "1D", "16-10-t2": "3BEFIJ",
-    "16-11-t1": "1H", "16-11-t2": "2J",
-    "16-12-t1": "2K", "16-12-t2": "2L",
-    "16-13-t1": "1B", "16-13-t2": "3EFGIJ",
-    "16-14-t1": "2D", "16-14-t2": "2G",
-    "16-15-t1": "1J", "16-15-t2": "2H",
-    "16-16-t1": "1K", "16-16-t2": "3DEIJL",
-
-    "8-1-t1": "16-1", "8-1-t2": "16-4",
-    "8-2-t1": "16-3", "8-2-t2": "16-6",
-    "8-3-t1": "16-2", "8-3-t2": "16-5",
-    "8-4-t1": "16-7", "8-4-t2": "16-8",
-    "8-5-t1": "16-12", "8-5-t2": "16-11",
-    "8-6-t1": "16-10", "8-6-t2": "16-9",
-    "8-7-t1": "16-15", "8-7-t2": "16-14",
-    "8-8-t1": "16-13", "8-8-t2": "16-16",
-
-    "4-1-t1": "8-2", "4-1-t2": "8-1",
-    "4-2-t1": "8-5", "4-2-t2": "8-6",
-    "4-3-t1": "8-3", "4-3-t2": "8-4",
-    "4-4-t1": "8-7", "4-4-t2": "8-8",
-
-    "2-1-t1": "4-1", "2-1-t2": "4-2",
-    "2-2-t1": "4-3", "2-2-t1": "4-4",
-
-    "3-1-t1": "p. 2-1", "3-1-t2": "p. 2-2",
-    "F-1-t1": "2-1", "F-1-t2": "2-2"
+    "16-1-t1": "2A", "16-1-t2": "2B", "16-2-t1": "1C", "16-2-t2": "2F",
+    "16-3-t1": "1E", "16-3-t2": "3ABCDF", "16-4-t1": "1F", "16-4-t2": "2C",
+    "16-5-t1": "2E", "16-5-t2": "2I", "16-6-t1": "1I", "16-6-t2": "3CDFGH",
+    "16-7-t1": "1A", "16-7-t2": "3CEFHI", "16-8-t1": "1L", "16-8-t2": "3EHIJK",
+    "16-9-t1": "1G", "16-9-t2": "3AEHIJ", "16-10-t1": "1D", "16-10-t2": "3BEFIJ",
+    "16-11-t1": "1H", "16-11-t2": "2J", "16-12-t1": "2K", "16-12-t2": "2L",
+    "16-13-t1": "1B", "16-13-t2": "3EFGIJ", "16-14-t1": "2D", "16-14-t2": "2G",
+    "16-15-t1": "1J", "16-15-t2": "2H", "16-16-t1": "1K", "16-16-t2": "3DEIJL",
+    "8-1-t1": "16-1", "8-1-t2": "16-4", "8-2-t1": "16-3", "8-2-t2": "16-6",
+    "8-3-t1": "16-2", "8-3-t2": "16-5", "8-4-t1": "16-7", "8-4-t2": "16-8",
+    "8-5-t1": "16-12", "8-5-t2": "16-11", "8-6-t1": "16-10", "8-6-t2": "16-9",
+    "8-7-t1": "16-15", "8-7-t2": "16-14", "8-8-t1": "16-13", "8-8-t2": "16-16",
+    "4-1-t1": "8-2", "4-1-t2": "8-1", "4-2-t1": "8-5", "4-2-t2": "8-6",
+    "4-3-t1": "8-3", "4-3-t2": "8-4", "4-4-t1": "8-7", "4-4-t2": "8-8",
+    "2-1-t1": "4-1", "2-1-t2": "4-2", "2-2-t1": "4-3", "2-2-t1": "4-4",
+    "3-1-t1": "p. 2-1", "3-1-t2": "p. 2-2", "F-1-t1": "2-1", "F-1-t2": "2-2"
 };
 
 const MATCH_MAP = [ [0,1], [2,3], [0,2], [3,1], [3,0], [1,2] ];
@@ -203,17 +172,52 @@ const KNOCKOUT_LINKS = {
     '16-10': { nextId: 6, nextPos: 't1' }, '16-9': { nextId: 6, nextPos: 't2' },
     '16-15': { nextId: 7, nextPos: 't1' }, '16-14': { nextId: 7, nextPos: 't2' },
     '16-13': { nextId: 8, nextPos: 't1' }, '16-16': { nextId: 8, nextPos: 't2' },
-
     '8-2': { nextId: 1, nextPos: 't1' }, '8-1': { nextId: 1, nextPos: 't2' },
     '8-5': { nextId: 2, nextPos: 't1' }, '8-6': { nextId: 2, nextPos: 't2' },
     '8-3': { nextId: 3, nextPos: 't1' }, '8-4': { nextId: 3, nextPos: 't2' },
     '8-7': { nextId: 4, nextPos: 't1' }, '8-8': { nextId: 4, nextPos: 't2' },
-
     '4-1': { nextId: 1, nextPos: 't1' }, '4-2': { nextId: 1, nextPos: 't2' },
     '4-3': { nextId: 2, nextPos: 't1' }, '4-4': { nextId: 2, nextPos: 't2' },
-
     '2-1': { nextId: 1, nextPos: 't1' }, '2-2': { nextId: 1, nextPos: 't2' }
 };
+
+// Fonction utilitaire asynchrone de hachage SHA-256 pour sécuriser les codes secrets
+async function hashString(str) {
+    if (!str) return '';
+    const encoder = new TextEncoder();
+    const data = encoder.encode(str);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Initialisation de l'œil d'affichage dynamique pour le mot de passe
+function setupPasswordToggle() {
+    const codeInput = document.getElementById('acc-input-code');
+    if (codeInput && !document.getElementById('acc-code-toggle')) {
+        codeInput.type = 'password';
+        const wrapper = document.createElement('div');
+        wrapper.className = 'password-wrapper';
+        codeInput.parentNode.insertBefore(wrapper, codeInput);
+        wrapper.appendChild(codeInput);
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.id = 'acc-code-toggle';
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'btn-toggle-password';
+        toggleBtn.innerHTML = '👁️';
+        toggleBtn.onclick = () => {
+            if (codeInput.type === 'password') {
+                codeInput.type = 'text';
+                toggleBtn.innerHTML = '🙈';
+            } else {
+                codeInput.type = 'password';
+                toggleBtn.innerHTML = '👁️';
+            }
+        };
+        wrapper.appendChild(toggleBtn);
+    }
+}
 
 function initTheme() {
     const savedTheme = localStorage.getItem('wc_theme');
@@ -226,18 +230,6 @@ function initTheme() {
         document.body.classList.remove('dark-mode');
         document.getElementById('theme-toggle').innerText = "🌙 Mode Sombre";
     }
-
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-        if (!localStorage.getItem('wc_theme')) { 
-            if (e.matches) {
-                document.body.classList.add('dark-mode');
-                document.getElementById('theme-toggle').innerText = "☀️ Mode Clair";
-            } else {
-                document.body.classList.remove('dark-mode');
-                document.getElementById('theme-toggle').innerText = "🌙 Mode Sombre";
-            }
-        }
-    });
 }
 
 function toggleTheme() {
@@ -247,13 +239,10 @@ function toggleTheme() {
     document.getElementById('theme-toggle').innerText = isDark ? "☀️ Mode Clair" : "🌙 Mode Sombre";
 }
 
-// Injection unifiée de la liste des avatars
 function populateAvatars() {
     const authSelect = document.getElementById('auth-avatar');
     const accSelect = document.getElementById('acc-select-avatar');
-    
     const optionsHTML = AVATAR_EMOJIS.map(emoji => `<option value="${emoji}">${emoji}</option>`).join('');
-    
     if (authSelect) authSelect.innerHTML = optionsHTML;
     if (accSelect) accSelect.innerHTML = optionsHTML;
 }
@@ -261,6 +250,7 @@ function populateAvatars() {
 async function init() {
     initTheme();
     populateAvatars();
+    setupPasswordToggle();
     updateAuthUI();
     renderGroupsSection(['A','B','C','D','E','F'], 'sec-G1');
     renderGroupsSection(['G','H','I','J','K','L'], 'sec-G2');
@@ -281,47 +271,77 @@ function renderStatusBadgeHTML(context) {
     return `<span class="status-badge live">À venir</span>`;
 }
 
+/* ============================================================
+   SESSION LOCALE — wrapper autour du localStorage.
+   La session locale ne sert qu'à savoir QUI est connecté sur cet
+   appareil ; elle n'est JAMAIS la source de vérité pour les
+   données de profil (pseudo / avatar) : celles-ci sont toujours
+   relues depuis Supabase (voir updateAccountDashboard).
+   ============================================================ */
+function getSession() {
+    const pseudo = localStorage.getItem('wc_pseudo');
+    if (!pseudo) return null;
+    return {
+        pseudo,
+        code: localStorage.getItem('wc_code') || '',
+        avatar: localStorage.getItem('wc_avatar') || '⚽'
+    };
+}
+
+function setSession({ pseudo, code, avatar }) {
+    localStorage.setItem('wc_pseudo', pseudo);
+    localStorage.setItem('wc_code', code);
+    localStorage.setItem('wc_avatar', avatar || '⚽');
+}
+
+function clearSession() {
+    // On ne vide QUE les clés de session (pas localStorage.clear(),
+    // qui effaçait aussi par erreur la préférence de thème sombre/clair).
+    localStorage.removeItem('wc_pseudo');
+    localStorage.removeItem('wc_code');
+    localStorage.removeItem('wc_avatar');
+}
+
 async function handleAuth() {
     const pseudo = document.getElementById('auth-pseudo').value.trim();
     const code = document.getElementById('auth-code').value.trim();
     const avatar = document.getElementById('auth-avatar').value;
     if (!pseudo || !code) { alert("Champs vides !"); return; }
 
+    const hashedCode = await hashString(code);
     const { data: user, error } = await supabaseClient.from('users').select('*').eq('pseudo', pseudo).maybeSingle();
     if (error) { alert("Erreur : " + error.message); return; }
 
     if (user) {
-        if (user.code === code) {
-            localStorage.setItem('wc_pseudo', pseudo);
-            localStorage.setItem('wc_code', code);
-            localStorage.setItem('wc_avatar', user.avatar || '⚽');
+        if (user.code === hashedCode) {
+            setSession({ pseudo, code, avatar: user.avatar || '⚽' });
             updateAuthUI();
-            if (document.getElementById('sec-account').classList.contains('active')) updateAccountDashboard();
+            if (document.getElementById('sec-account').classList.contains('active')) await updateAccountDashboard();
         } else { alert("Code secret erroné."); }
     } else {
-        const { error: insError } = await supabaseClient.from('users').insert({ pseudo, code, avatar });
+        const { error: insError } = await supabaseClient.from('users').insert({ pseudo, code: hashedCode, avatar });
         if (insError) { alert("Erreur : " + insError.message); } 
         else {
-            localStorage.setItem('wc_pseudo', pseudo); localStorage.setItem('wc_code', code); localStorage.setItem('wc_avatar', avatar);
+            setSession({ pseudo, code, avatar });
             updateAuthUI(); await calculateLeaderboard();
-            if (document.getElementById('sec-account').classList.contains('active')) updateAccountDashboard();
+            if (document.getElementById('sec-account').classList.contains('active')) await updateAccountDashboard();
         }
     }
 }
 
 function handleLogout() { 
-    localStorage.clear(); 
+    clearSession();
     updateAuthUI(); 
     if (document.getElementById('sec-account').classList.contains('active')) updateAccountDashboard();
 }
 
 function updateAuthUI() {
-    const pseudo = localStorage.getItem('wc_pseudo');
-    if (pseudo) {
+    const session = getSession();
+    if (session) {
         document.getElementById('auth-logged-out').style.display = 'none';
         document.getElementById('auth-logged-in').style.display = 'flex';
-        document.getElementById('user-display-name').innerText = pseudo;
-        document.getElementById('user-display-avatar').innerText = localStorage.getItem('wc_avatar') || '⚽';
+        document.getElementById('user-display-name').innerText = session.pseudo;
+        document.getElementById('user-display-avatar').innerText = session.avatar;
     } else {
         document.getElementById('auth-logged-out').style.display = 'flex';
         document.getElementById('auth-logged-in').style.display = 'none';
@@ -370,21 +390,48 @@ function renderGroupsSection(letters, containerId) {
 }
 
 async function updateAccountDashboard() {
-    const pseudo = localStorage.getItem('wc_pseudo');
+    const session = getSession();
     const loggedOutView = document.getElementById('account-logged-out-view');
     const loggedInView = document.getElementById('account-logged-in-view');
 
-    if (!pseudo) {
-        if(loggedOutView) loggedOutView.style.display = 'block';
-        if(loggedInView) loggedInView.style.display = 'none';
+    if (!session) {
+        if (loggedOutView) loggedOutView.style.display = 'block';
+        if (loggedInView) loggedInView.style.display = 'none';
         return;
     }
 
-    if(loggedOutView) loggedOutView.style.display = 'none';
-    if(loggedInView) loggedInView.style.display = 'block';
+    // SOURCE DE VÉRITÉ = SUPABASE. On ne fait jamais confiance au localStorage
+    // pour le pseudo/avatar affichés : on relit toujours la ligne actuelle.
+    const { data: dbUser, error: userError } = await supabaseClient
+        .from('users').select('pseudo, avatar').eq('pseudo', session.pseudo).maybeSingle();
 
-    // 1. Récupération des statistiques depuis le classement général calculé
-    const myStats = globalRankList.find(p => p.pseudo === pseudo);
+    if (userError) {
+        alert("Impossible de charger votre compte (" + userError.message + ").");
+        return;
+    }
+
+    if (!dbUser) {
+        // Le compte associé à cette session n'existe plus en base (supprimé,
+        // ou renommé depuis un autre appareil) : on nettoie la session locale
+        // plutôt que d'afficher des données fantômes.
+        clearSession();
+        updateAuthUI();
+        if (loggedOutView) loggedOutView.style.display = 'block';
+        if (loggedInView) loggedInView.style.display = 'none';
+        return;
+    }
+
+    // Si l'avatar a changé ailleurs (autre appareil), on resynchronise le cache local.
+    if (dbUser.avatar && dbUser.avatar !== session.avatar) {
+        localStorage.setItem('wc_avatar', dbUser.avatar);
+        session.avatar = dbUser.avatar;
+        updateAuthUI();
+    }
+
+    if (loggedOutView) loggedOutView.style.display = 'none';
+    if (loggedInView) loggedInView.style.display = 'block';
+
+    const myStats = globalRankList.find(p => p.pseudo === session.pseudo);
     if (myStats) {
         document.getElementById('acc-stat-rank').innerText = `#${myStats.rank}`;
         document.getElementById('acc-stat-pts').innerText = `${myStats.totalPoints} pts`;
@@ -395,35 +442,27 @@ async function updateAccountDashboard() {
         document.getElementById('acc-stat-details').innerText = `Aucun match calculé`;
     }
 
-    // 2. Traitement des pronostics manquants (Fenêtre glissante de 48 heures)
     const now = new Date();
     const fortyEightHoursLater = new Date(now.getTime() + (48 * 60 * 60 * 1000));
-    
-    const { data: myPronos } = await supabaseClient.from('pronostics').select('match_id').eq('pseudo', pseudo);
+    const { data: myPronos } = await supabaseClient.from('pronostics').select('match_id').eq('pseudo', session.pseudo);
     const predictedMatchIds = new Set(myPronos ? myPronos.map(p => p.match_id) : []);
 
     let upcomingMissingHTML = '';
-    
     for (let matchId in MATCH_SCHEDULE) {
         const m = MATCH_SCHEDULE[matchId];
         if (m.iso) {
             const matchDate = new Date(m.iso);
             if (matchDate > now && matchDate <= fortyEightHoursLater && !predictedMatchIds.has(matchId)) {
                 let t1 = "Équipe A", t2 = "Équipe B";
-                
                 if (matchId.startsWith('G-')) {
                     const parts = matchId.split('-');
-                    const gLetter = parts[1];
-                    const mIdx = parseInt(parts[2]);
+                    const gLetter = parts[1]; const mIdx = parseInt(parts[2]);
                     if (GROUP_MATCHES[gLetter] && GROUP_MATCHES[gLetter][mIdx]) {
-                        t1 = GROUP_MATCHES[gLetter][mIdx].t1;
-                        t2 = GROUP_MATCHES[gLetter][mIdx].t2;
+                        t1 = GROUP_MATCHES[gLetter][mIdx].t1; t2 = GROUP_MATCHES[gLetter][mIdx].t2;
                     }
                 } else {
-                    t1 = tree[`${matchId}-t1`] || "En attente";
-                    t2 = tree[`${matchId}-t2`] || "En attente";
+                    t1 = tree[`${matchId}-t1`] || "En attente"; t2 = tree[`${matchId}-t2`] || "En attente";
                 }
-
                 upcomingMissingHTML += `
                     <div class="missing-prono-item" onclick="showSection('G1', document.querySelector('.tab')); openMatchModal('${matchId}', '${t1}', '${t2}')">
                         <div class="missing-prono-info">
@@ -435,49 +474,111 @@ async function updateAccountDashboard() {
             }
         }
     }
-    
     document.getElementById('acc-missing-pronos').innerHTML = upcomingMissingHTML || "<p style='color:green; font-weight:600; text-align:center; padding:10px;'>🎉 Parfait ! Aucun pronostic manquant pour les prochaines 48h.</p>";
     
-    // 3. Remplissage automatique des champs de configuration
-    document.getElementById('acc-input-pseudo').value = pseudo;
-    document.getElementById('acc-input-code').value = localStorage.getItem('wc_code') || '';
-    document.getElementById('acc-select-avatar').value = localStorage.getItem('wc_avatar') || '⚽';
+    document.getElementById('acc-input-pseudo').value = dbUser.pseudo;
+    document.getElementById('acc-input-code').value = session.code;
+    document.getElementById('acc-select-avatar').value = dbUser.avatar || '⚽';
 }
 
 async function saveAccountChanges() {
-    const oldPseudo = localStorage.getItem('wc_pseudo');
-    const oldCode = localStorage.getItem('wc_code');
-    if (!oldPseudo) return;
+    const session = getSession();
+    if (!session) return;
 
     const newPseudo = document.getElementById('acc-input-pseudo').value.trim();
     const newCode = document.getElementById('acc-input-code').value.trim();
     const newAvatar = document.getElementById('acc-select-avatar').value;
-
     if (!newPseudo || !newCode) { alert("Les champs ne peuvent pas être vides."); return; }
 
-    if (newPseudo !== oldPseudo) {
-        const { data: checkUser } = await supabaseClient.from('users').select('pseudo').eq('pseudo', newPseudo).maybeSingle();
-        if (checkUser) { alert("Ce pseudo est déjà utilisé par un autre joueur."); return; }
+    const saveBtn = document.querySelector('#sec-account .btn.primary');
+    const originalBtnText = saveBtn ? saveBtn.innerText : null;
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.innerText = "Enregistrement..."; }
+
+    try {
+        // ÉTAPE 1 — Re-vérifier l'identité à partir de la base (jamais depuis
+        // le localStorage, qui peut être périmé). Cela isole clairement les
+        // erreurs "session invalide" des erreurs "écriture refusée".
+        const { data: dbUser, error: fetchError } = await supabaseClient
+            .from('users').select('pseudo, code, avatar').eq('pseudo', session.pseudo).maybeSingle();
+
+        if (fetchError) { alert("Erreur réseau lors de la vérification de votre compte : " + fetchError.message); return; }
+        if (!dbUser) {
+            alert("Votre compte n'existe plus sur le serveur. Vous allez être déconnecté.");
+            handleLogout();
+            return;
+        }
+
+        const oldHashedCode = await hashString(session.code);
+        if (dbUser.code !== oldHashedCode) {
+            alert("Votre session locale est désynchronisée avec le serveur (code secret différent). Merci de vous déconnecter puis de vous reconnecter avant de réessayer.");
+            return;
+        }
+
+        // ÉTAPE 2 — Unicité du pseudo si modifié.
+        if (newPseudo !== session.pseudo) {
+            const { data: existing, error: checkError } = await supabaseClient
+                .from('users').select('pseudo').eq('pseudo', newPseudo).maybeSingle();
+            if (checkError) { alert("Erreur lors de la vérification du pseudo : " + checkError.message); return; }
+            if (existing) { alert("Ce pseudo est déjà utilisé par un autre joueur."); return; }
+        }
+
+        const newHashedCode = await hashString(newCode);
+
+        // ÉTAPE 3 — Écriture en base. On filtre uniquement sur l'ANCIEN pseudo
+        // (déjà authentifié à l'étape 1) et on demande à Supabase de renvoyer
+        // la ligne modifiée via .select() : c'est le SEUL moyen fiable de
+        // savoir si l'UPDATE a réellement modifié une ligne, ou si elle a été
+        // silencieusement ignorée (0 ligne correspondante / policy RLS).
+        const { data: updatedRows, error: updateError } = await supabaseClient
+            .from('users')
+            .update({ pseudo: newPseudo, code: newHashedCode, avatar: newAvatar })
+            .eq('pseudo', session.pseudo)
+            .select();
+
+        if (updateError) {
+            if (updateError.code === '23505') alert("Ce pseudo est déjà pris par un autre joueur.");
+            else alert("Erreur lors de la mise à jour : " + updateError.message);
+            return;
+        }
+        if (!updatedRows || updatedRows.length === 0) {
+            alert("La mise à jour n'a pas pu être appliquée (aucune ligne modifiée côté serveur). C'est très probablement un problème de droits d'accès Supabase : vérifiez qu'une policy RLS 'UPDATE' autorisant le rôle anon existe bien sur la table 'users'.");
+            return;
+        }
+
+        // ÉTAPE 4 — Propager le changement vers les pronostics existants
+        // (la table 'pronostics' référence le pseudo et le code par valeur,
+        // pas par clé étrangère). On le fait seulement si pseudo/code ont changé.
+        if (newPseudo !== session.pseudo || newCode !== session.code) {
+            const { data: updatedPronos, error: pronoError } = await supabaseClient
+                .from('pronostics')
+                .update({ pseudo: newPseudo, user_code: newHashedCode })
+                .eq('pseudo', session.pseudo)
+                .select();
+
+            if (pronoError) {
+                alert("Votre profil a bien été mis à jour, mais la synchronisation de vos pronostics existants a échoué : " + pronoError.message + "\nContactez l'administrateur si vos points semblent incorrects par la suite.");
+            } else if (updatedPronos && updatedPronos.length === 0) {
+                // 0 ligne modifiée n'est pas forcément une erreur (le joueur n'a peut-être
+                // encore déposé aucun pronostic) — mais si on sait qu'il en a, c'est suspect.
+                const { count } = await supabaseClient
+                    .from('pronostics').select('*', { count: 'exact', head: true }).eq('pseudo', session.pseudo);
+                if (count && count > 0) {
+                    alert("Votre profil a été mis à jour, mais aucun pronostic n'a pu être resynchronisé (probablement une policy RLS 'UPDATE' manquante sur la table 'pronostics'). Vos anciens pronostics restent associés à votre ancien pseudo/code — contactez l'administrateur.");
+                }
+            }
+        }
+
+        // ÉTAPE 5 — On ne met à jour la session locale QU'APRÈS confirmation
+        // réelle de l'écriture en base (updatedRows.length > 0 ci-dessus).
+        setSession({ pseudo: newPseudo, code: newCode, avatar: newAvatar });
+
+        alert("Compte mis à jour avec succès !");
+        updateAuthUI();
+        await syncFromSupabase();
+        await updateAccountDashboard();
+    } finally {
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.innerText = originalBtnText; }
     }
-
-    const { error: uError } = await supabaseClient.from('users').update({
-        pseudo: newPseudo, code: newCode, avatar: newAvatar
-    }).eq('pseudo', oldPseudo).eq('code', oldCode);
-
-    if (uError) { alert("Erreur lors de la mise à jour : " + uError.message); return; }
-
-    if (newPseudo !== oldPseudo) {
-        await supabaseClient.from('pronostics').update({ pseudo: newPseudo, user_code: newCode }).eq('pseudo', oldPseudo);
-    }
-
-    localStorage.setItem('wc_pseudo', newPseudo);
-    localStorage.setItem('wc_code', newCode);
-    localStorage.setItem('wc_avatar', newAvatar);
-
-    alert("Compte mis à jour avec succès !");
-    updateAuthUI();
-    await syncFromSupabase();
-    await updateAccountDashboard();
 }
 
 function renderGroupMatches(group) {
@@ -542,12 +643,12 @@ async function openMatchModal(matchId, t1, t2) {
 
     const pronoForm = document.getElementById('prono-form-card');
     const lockAlert = document.getElementById('modal-lock-msg');
-    const userPseudo = localStorage.getItem('wc_pseudo');
+    const session = getSession();
 
-    if (!userPseudo) {
+    if (!session) {
         pronoForm.style.display = 'none'; lockAlert.innerHTML = "🔒 Connectez-vous pour pouvoir parier."; lockAlert.style.display = 'block';
     } else if (ctx.status === 'complete' || (ctx.iso && new Date() >= new Date(ctx.iso))) {
-        pronoForm.style.display = 'none'; lockAlert.innerHTML = "🔒 Verrouillé (Match débuté ou terminé)."; lockAlert.style.display = 'block';
+        pronoForm.style.display = 'none'; lockAlert.innerHTML = "🔒 Match débuté ou terminé."; lockAlert.style.display = 'block';
     } else {
         pronoForm.style.display = 'block'; lockAlert.style.display = 'none';
         document.getElementById('prono-s1').value = ''; document.getElementById('prono-s2').value = '';
@@ -558,18 +659,12 @@ async function openMatchModal(matchId, t1, t2) {
 function closeModal() { document.getElementById('match-modal').style.display = 'none'; }
 
 async function loadMatchPronostics(matchId) {
-    const container = document.getElementById('prono-list-container'); 
-    container.innerHTML = "Chargement...";
-    
+    const container = document.getElementById('prono-list-container'); container.innerHTML = "Chargement...";
     const { data: usersData, error: uError } = await supabaseClient.from('users').select('pseudo, avatar');
     if (uError) { container.innerHTML = "Erreur de chargement des profils."; return; }
     
     const avatarMap = {};
-    if (usersData) {
-        usersData.forEach(u => {
-            avatarMap[u.pseudo] = u.avatar || '⚽';
-        });
-    }
+    if (usersData) { usersData.forEach(u => { avatarMap[u.pseudo] = u.avatar || '⚽'; }); }
 
     const { data, error } = await supabaseClient.from('pronostics').select('*').eq('match_id', matchId);
     if (error) { container.innerHTML = "Erreur."; return; }
@@ -581,21 +676,22 @@ async function loadMatchPronostics(matchId) {
             <div class="prono-item">
                 <span><span class="profile-avatar">${userAvatar}</span> <strong>${p.pseudo}</strong></span>
                 <span class="prono-val">${p.predicted_score1} - ${p.predicted_score2}</span>
-            </div>
-        `;
+            </div>`;
     }).join('');
 }
 
 async function saveUserPronostic() {
-    const pseudo = localStorage.getItem('wc_pseudo'), user_code = localStorage.getItem('wc_code');
+    const session = getSession();
     const s1 = document.getElementById('prono-s1').value.trim(), s2 = document.getElementById('prono-s2').value.trim();
-    if (!pseudo || !user_code) return; if (s1 === '' || s2 === '') { alert("Score invalide."); return; }
+    if (!session) return; if (s1 === '' || s2 === '') { alert("Score invalide."); return; }
 
     const ctx = getMatchTimeContext(currentActiveMatchId);
     if (ctx.status === 'complete' || (ctx.iso && new Date() >= new Date(ctx.iso))) { alert("Verrouillé !"); return; }
 
+    const hashedUserCode = await hashString(session.code);
+
     const { error } = await supabaseClient.from('pronostics').upsert({
-        match_id: currentActiveMatchId, pseudo, predicted_score1: parseInt(s1), predicted_score2: parseInt(s2), user_code, updated_at: new Date()
+        match_id: currentActiveMatchId, pseudo: session.pseudo, predicted_score1: parseInt(s1), predicted_score2: parseInt(s2), user_code: hashedUserCode, updated_at: new Date()
     }, { onConflict: 'match_id, pseudo' });
 
     if (error) { alert("Erreur d'envoi : " + error.message); } 
@@ -604,7 +700,6 @@ async function saveUserPronostic() {
 
 async function calculateLeaderboard() {
     const tbody = document.getElementById('leaderboard-tbody'); if (!tbody) return;
-
     const { data: users, error: uErr } = await supabaseClient.from('users').select('pseudo, avatar');
     const { data: pronos, error: pErr } = await supabaseClient.from('pronostics').select('*');
     if (uErr || pErr) return;
@@ -618,22 +713,16 @@ async function calculateLeaderboard() {
         const actS1 = scores[`${p.match_id}-0`], actS2 = scores[`${p.match_id}-1`];
         if (actS1 !== undefined && actS2 !== undefined && userScores[p.pseudo]) {
             const prS1 = p.predicted_score1, prS2 = p.predicted_score2;
-            
-            const actualSign = Math.sign(actS1 - actS2);
-            const predSign = Math.sign(prS1 - prS2);
+            const actualSign = Math.sign(actS1 - actS2); const predSign = Math.sign(prS1 - prS2);
 
             if (actS1 === prS1 && actS2 === prS2) {
-                userScores[p.pseudo].exacts++;
-                userScores[p.pseudo].totalPoints += 5;
+                userScores[p.pseudo].exacts++; userScores[p.pseudo].totalPoints += 5;
             } else if (actualSign === predSign) {
-                const actualDiff = actS1 - actS2;
-                const predDiff = prS1 - prS2;
+                const actualDiff = actS1 - actS2; const predDiff = prS1 - prS2;
                 if (actualDiff === predDiff) {
-                    userScores[p.pseudo].diffs++;
-                    userScores[p.pseudo].totalPoints += 3;
+                    userScores[p.pseudo].diffs++; userScores[p.pseudo].totalPoints += 3;
                 } else {
-                    userScores[p.pseudo].partials++;
-                    userScores[p.pseudo].totalPoints += 2;
+                    userScores[p.pseudo].partials++; userScores[p.pseudo].totalPoints += 2;
                 }
             }
         }
@@ -647,18 +736,52 @@ async function calculateLeaderboard() {
     rankList.forEach((player, index) => {
         if (index > 0) {
             const prev = rankList[index - 1];
-            const isTie = player.totalPoints === prev.totalPoints && 
-                          player.exacts === prev.exacts && 
-                          player.diffs === prev.diffs && 
-                          player.partials === prev.partials;
-            if (!isTie) {
-                currentRank = index + 1;
-            }
+            const isTie = player.totalPoints === prev.totalPoints && player.exacts === prev.exacts && player.diffs === prev.diffs && player.partials === prev.partials;
+            if (!isTie) currentRank = index + 1;
         }
         player.rank = currentRank;
     });
 
     globalRankList = rankList; 
+
+    // GÉNÉRATION DYNAMIQUE DE L'ANIMATION DU PODIUM
+    let leaderboardSection = document.getElementById('sec-LEADERBOARD');
+    if (leaderboardSection) {
+        let card = leaderboardSection.querySelector('.card');
+        if (card) {
+            let existingPodium = card.querySelector('.podium-container');
+            if (existingPodium) existingPodium.remove();
+
+            if (rankList.length > 0) {
+                const podiumContainer = document.createElement('div');
+                podiumContainer.className = 'podium-container';
+                const top3 = rankList.slice(0, 3);
+                let podiumHTML = '';
+                
+                // Ordre d'affichage visuel standardisé : 2ème (gauche), 1er (centre), 3ème (droite)
+                const visualMapping = [1, 0, 2];
+                visualMapping.forEach(idx => {
+                    const p = top3[idx];
+                    if (p) {
+                        const styleClass = idx === 0 ? 'first' : idx === 1 ? 'second' : 'third';
+                        const crown = idx === 0 ? '<div class="podium-crown">👑</div>' : '';
+                        podiumHTML += `
+                            <div class="podium-column ${styleClass}">
+                                ${crown}
+                                <div class="podium-avatar">${p.avatar}</div>
+                                <div class="podium-name">${p.pseudo}</div>
+                                <div class="podium-points">${p.totalPoints} pts</div>
+                                <div class="podium-rank-number">${idx + 1}</div>
+                            </div>`;
+                    }
+                });
+                podiumContainer.innerHTML = podiumHTML;
+                let tableWrapper = card.querySelector('div[style*="overflow-x: auto"]');
+                if (tableWrapper) card.insertBefore(podiumContainer, tableWrapper);
+                else card.appendChild(podiumContainer);
+            }
+        }
+    }
 
     const counts = {};
     rankList.forEach(p => { counts[p.rank] = (counts[p.rank] || 0) + 1; });
@@ -674,8 +797,7 @@ async function calculateLeaderboard() {
                 <td style="text-align: center; color: var(--text-muted); font-weight:600;">${player.diffs}</td>
                 <td style="text-align: center; color: var(--text-muted); font-weight:600;">${player.partials}</td>
                 <td style="text-align: right; padding-right: 15px; font-size: 1rem; color: var(--accent);"><strong>${player.totalPoints} pts</strong></td>
-            </tr>
-        `;
+            </tr>`;
     }).join('');
     
     if (document.getElementById('sec-account').classList.contains('active')) updateAccountDashboard();
@@ -736,22 +858,14 @@ function buildKnockoutTree(standings, allGroupsDone) {
     };
 
     const config = [
-        { t1: getTeam('A', 1), t2: getTeam('B', 1) },        
-        { t1: getTeam('C', 0), t2: getTeam('F', 1) },        
-        { t1: getTeam('E', 0), t2: thirdAssignments[0] },    
-        { t1: getTeam('F', 0), t2: getTeam('C', 1) },        
-        { t1: getTeam('E', 1), t2: getTeam('I', 1) },        
-        { t1: getTeam('I', 0), t2: thirdAssignments[1] },    
-        { t1: getTeam('A', 0), t2: thirdAssignments[2] },    
-        { t1: getTeam('L', 0), t2: thirdAssignments[3] },    
-        { t1: getTeam('G', 0), t2: thirdAssignments[4] },    
-        { t1: getTeam('D', 0), t2: thirdAssignments[5] },    
-        { t1: getTeam('H', 0), t2: getTeam('J', 1) },        
-        { t1: getTeam('K', 1), t2: getTeam('L', 1) },        
-        { t1: getTeam('B', 0), t2: thirdAssignments[6] },    
-        { t1: getTeam('D', 1), t2: getTeam('G', 1) },        
-        { t1: getTeam('J', 0), t2: getTeam('H', 1) },        
-        { t1: getTeam('K', 0), t2: thirdAssignments[7] }     
+        { t1: getTeam('A', 1), t2: getTeam('B', 1) }, { t1: getTeam('C', 0), t2: getTeam('F', 1) },        
+        { t1: getTeam('E', 0), t2: thirdAssignments[0] }, { t1: getTeam('F', 0), t2: getTeam('C', 1) },        
+        { t1: getTeam('E', 1), t2: getTeam('I', 1) }, { t1: getTeam('I', 0), t2: thirdAssignments[1] },    
+        { t1: getTeam('A', 0), t2: thirdAssignments[2] }, { t1: getTeam('L', 0), t2: thirdAssignments[3] },    
+        { t1: getTeam('G', 0), t2: thirdAssignments[4] }, { t1: getTeam('D', 0), t2: thirdAssignments[5] },    
+        { t1: getTeam('H', 0), t2: getTeam('J', 1) }, { t1: getTeam('K', 1), t2: getTeam('L', 1) },        
+        { t1: getTeam('B', 0), t2: thirdAssignments[6] }, { t1: getTeam('D', 1), t2: getTeam('G', 1) },        
+        { t1: getTeam('J', 0), t2: getTeam('H', 1) }, { t1: getTeam('K', 0), t2: thirdAssignments[7] }     
     ];
 
     config.forEach((match, idx) => {
@@ -788,20 +902,17 @@ function updateKnockoutUI() {
         { label: '4', text: 'Quarts' }, { label: '2', text: 'Demis' }, 
         { label: '3', text: 'Petite Finale' }, { label: 'F', text: 'Grande Finale' }
     ];
-    
     stages.forEach(stage => {
         const visualOrder = STAGE_ORDERS[stage.label] || [];
         visualOrder.forEach(i => {
             const keyBase = `${stage.label}-${i}`;
             let el1 = document.getElementById(`${keyBase}-t1`), el2 = document.getElementById(`${keyBase}-t2`);
             let t1Name = tree[`${keyBase}-t1`], t2Name = tree[`${keyBase}-t2`];
-            
             if (el1) el1.innerHTML = formatTeamName(t1Name, `${keyBase}-t1`); 
             if (el2) el2.innerHTML = formatTeamName(t2Name, `${keyBase}-t2`);
             
             let s1 = scores[`${keyBase}-0`] ?? '-'; let s2 = scores[`${keyBase}-1`] ?? '-';
             let rowEl = el1 ? el1.closest('.match-row') : null;
-            
             if (rowEl) {
                 rowEl.querySelector('.score-box-view').innerText = `${s1} : ${s2}`;
                 const ctx = getMatchTimeContext(keyBase);
@@ -846,7 +957,7 @@ async function importData() {
             } else {
                 let count = type === '16' ? 16 : type === '8' ? 8 : type === '4' ? 4 : type === '2' ? 2 : 1;
                 for (let i = 1; i <= count; i++) {
-                    let currT1 = tree[`${type}-${i}-t1`], currT2 = tree[`${type}-${i}-t2` || `${type}-${i}-t2__`];
+                    let currT1 = tree[`${type}-${i}-t1`], currT2 = tree[`${type}-${i}-t2`];
                     if ((currT1 === t1 && currT2 === t2) || (currT1 === t2 && currT2 === t1)) {
                         matchId = `${type}-${i}`; let rev = currT1 === t2;
                         scores[`${matchId}-0`] = parseInt(rev ? s2 : s1); scores[`${matchId}-1`] = parseInt(rev ? s1 : s2);
@@ -876,8 +987,8 @@ function exportData() {
     const stages = [{ count: 16, label: '16' }, { count: 8, label: '8' }, { count: 4, label: '4' }, { count: 2, label: '2' }, { count: 1, label: '3' }, { count: 1, label: 'F' }];
     stages.forEach(stage => {
         for (let i = 1; i <= stage.count; i++) {
-            let keyBase = `${stage.label}-${i}`; let t1 = tree[`${keyBase}-t1`], t2 = tree[`${keyBase}-t2`];
-            let s1 = scores[`${keyBase}-0`], s2 = scores[`${keyBase}-1`] || scores[`${keyBase}-1__`];
+            let keyBase = `${stage.label}-${i}`; let t1 = tree[`${keyBase}-t1`], t2 = tree[`${keyBase}-t2__` || `${keyBase}-t2` ];
+            let s1 = scores[`${keyBase}-0`], s2 = scores[`${keyBase}-1` || `${keyBase}-1__` ];
             if (t1 && t2 && s1 !== undefined && s2 !== undefined) {
                 let c1 = CODES[t1], c2 = CODES[t2];
                 if (c1 && c2) {
@@ -895,12 +1006,8 @@ function exportBracketToPNG() {
     const element = document.getElementById('bracket-capture-target');
     const isDark = document.body.classList.contains('dark-mode');
     const bgCanvasColor = isDark ? '#111a2e' : '#f1f5f9'; 
-    
     html2canvas(element, { backgroundColor: bgCanvasColor, scale: 2 }).then(canvas => {
-        const link = document.createElement('a'); 
-        link.download = 'Arbre_2026.png'; 
-        link.href = canvas.toDataURL('image/png'); 
-        link.click();
+        const link = document.createElement('a'); link.download = 'Arbre_2026.png'; link.href = canvas.toDataURL('image/png'); link.click();
     });
 }
 
