@@ -685,10 +685,10 @@ async function saveAccountChanges() {
         // ÉTAPE 4 — Propager le changement vers les pronostics existants
         // (la table 'pronostics' référence le pseudo et le code par valeur,
         // pas par clé étrangère). On le fait seulement si pseudo/code ont changé.
-        if (newPseudo !== session.pseudo || newCode !== session.code) {
+        if (newPseudo !== session.pseudo) {
             const { data: updatedPronos, error: pronoError } = await supabaseClient
                 .from('pronostics')
-                .update({ pseudo: newPseudo, user_code: newHashedCode })
+                .update({ pseudo: newPseudo})
                 .eq('pseudo', session.pseudo)
                 .select();
 
@@ -696,7 +696,7 @@ async function saveAccountChanges() {
                 showToast("Votre profil a bien été mis à jour, mais la synchronisation de vos pronostics existants a échoué : " + pronoError.message + ". Contactez l'administrateur si vos points semblent incorrects par la suite.", "error", 8000);
             } else if (updatedPronos && updatedPronos.length === 0) {
                 // 0 ligne modifiée n'est pas forcément une erreur (le joueur n'a peut-être
-                // encore déposé aucun pronostic) — mais si on sait qu'il en a, c'est suspect.
+                // encore déposé aucun pronostic) — si on sait qu'il en a, c'est suspect.
                 const { count } = await supabaseClient
                     .from('pronostics').select('*', { count: 'exact', head: true }).eq('pseudo', session.pseudo);
                 if (count && count > 0) {
@@ -912,7 +912,7 @@ async function saveUserPronostic() {
     const hashedUserCode = await hashString(session.code);
 
     const { error } = await supabaseClient.from('pronostics').upsert({
-        match_id: currentActiveMatchId, pseudo: session.pseudo, predicted_score1: parseInt(s1), predicted_score2: parseInt(s2), user_code: hashedUserCode, updated_at: new Date()
+        match_id: currentActiveMatchId, pseudo: session.pseudo, predicted_score1: parseInt(s1), predicted_score2: parseInt(s2), updated_at: new Date()
     }, { onConflict: 'match_id, pseudo' });
 
     if (error) { showToast("Erreur d'envoi : " + error.message, "error"); } 
