@@ -100,27 +100,6 @@ const TEAMS = {
     'L': ['Angleterre', 'Croatie', 'Ghana', 'Panama']
 };
 
-// DICTIONNAIRE MANUEL DES 1/16 DE FINALE
-// Modifie les noms des équipes ici pour refléter le tirage réel ou les équipes qualifiées
-const MANUAL_KNOCKOUT_TEAMS = {
-    "16-1": { t1: "Mexique", t2: "Suisse" },
-    "16-2": { t1: "Bresil", t2: "Japon" },
-    "16-3": { t1: "Allemagne", t2: "Turquie" },
-    "16-4": { t1: "Pays-Bas", t2: "Maroc" },
-    "16-5": { t1: "Cote dIvoire", t2: "France" },
-    "16-6": { t1: "Senegal", t2: "USA" },
-    "16-7": { t1: "Afrique du Sud", t2: "Suede" },
-    "16-8": { t1: "Angleterre", t2: "Arabie Saoudite" },
-    "16-9": { t1: "Belgique", t2: "Coree du Sud" },
-    "16-10": { t1: "Paraguay", t2: "Bosnie" },
-    "16-11": { t1: "Espagne", t2: "Algerie" },
-    "16-12": { t1: "RD Congo", t2: "Croatie" },
-    "16-13": { t1: "Canada", t2: "Iran" },
-    "16-14": { t1: "Australie", t2: "Egypte" },
-    "16-15": { t1: "Argentine", t2: "Cap-Vert" },
-    "16-16": { t1: "Portugal", t2: "Ouzbekistan" }
-};
-
 const CODES = {
     'Mexique':'MEX', 'Afrique du Sud':'RSA', 'Coree du Sud':'KOR', 'Tchequie':'CZE',
     'Canada':'CAN', 'Bosnie':'BIH', 'Qatar':'QAT', 'Suisse':'SUI',
@@ -164,6 +143,7 @@ const MANUAL_KNOCKOUT_TEAMS = {
     "16-14": { t1: "Australie", t2: "Egypte" },
     "16-15": { t1: "Argentine", t2: "Cap-Vert" },
     "16-16": { t1: "Colombie", t2: "Ghana" }
+};
 
 const STAGE_ORDERS = {
     '16': [1, 4, 3, 6, 12, 11, 10, 9, 2, 5, 7, 8, 15, 14, 13, 16],
