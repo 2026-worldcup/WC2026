@@ -100,6 +100,27 @@ const TEAMS = {
     'L': ['Angleterre', 'Croatie', 'Ghana', 'Panama']
 };
 
+// DICTIONNAIRE MANUEL DES 1/16 DE FINALE
+// Modifie les noms des équipes ici pour refléter le tirage réel ou les équipes qualifiées
+const MANUAL_KNOCKOUT_TEAMS = {
+    "16-1": { t1: "Mexique", t2: "Suisse" },
+    "16-2": { t1: "Bresil", t2: "Japon" },
+    "16-3": { t1: "Allemagne", t2: "Turquie" },
+    "16-4": { t1: "Pays-Bas", t2: "Maroc" },
+    "16-5": { t1: "Cote dIvoire", t2: "France" },
+    "16-6": { t1: "Senegal", t2: "USA" },
+    "16-7": { t1: "Afrique du Sud", t2: "Suede" },
+    "16-8": { t1: "Angleterre", t2: "Arabie Saoudite" },
+    "16-9": { t1: "Belgique", t2: "Coree du Sud" },
+    "16-10": { t1: "Paraguay", t2: "Bosnie" },
+    "16-11": { t1: "Espagne", t2: "Algerie" },
+    "16-12": { t1: "RD Congo", t2: "Croatie" },
+    "16-13": { t1: "Canada", t2: "Iran" },
+    "16-14": { t1: "Australie", t2: "Egypte" },
+    "16-15": { t1: "Argentine", t2: "Cap-Vert" },
+    "16-16": { t1: "Portugal", t2: "Ouzbekistan" }
+};
+
 const CODES = {
     'Mexique':'MEX', 'Afrique du Sud':'RSA', 'Coree du Sud':'KOR', 'Tchequie':'CZE',
     'Canada':'CAN', 'Bosnie':'BIH', 'Qatar':'QAT', 'Suisse':'SUI',
@@ -123,6 +144,26 @@ const FLAGS = {
     'FRA': '🇫🇷', 'SEN': '🇸🇳', 'IRQ': '🇮🇶', 'NOR': '🇳🇴', 'ARG': '🇦🇷', 'ALG': '🇩🇿', 'AUT': '🇦🇹', 'JOR': '🇯🇴',
     'POR': '🇵🇹', 'COD': '🇨🇩', 'UZB': '🇺🇿', 'COL': '🇨🇴', 'ENG': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'CRO': '🇭🇷', 'GHA': '🇬🇭', 'PAN': '🇵🇦'
 };
+
+  //DICTIONNAIRE MANUEL DES 1/16 DE FINALE
+// Modifie les noms des équipes ici pour refléter le tirage réel ou les équipes qualifiées
+const MANUAL_KNOCKOUT_TEAMS = {
+    "16-1": { t1: "Afrique du Sud", t2: "Canada" },
+    "16-2": { t1: "Bresil", t2: "Japon" },
+    "16-3": { t1: "Allemagne", t2: "Paraguay" },
+    "16-4": { t1: "Pays-Bas", t2: "Maroc" },
+    "16-5": { t1: "Cote dIvoire", t2: "Norvège" },
+    "16-6": { t1: "France", t2: "Suède" },
+    "16-7": { t1: "Mexique", t2: "Equateur" },
+    "16-8": { t1: "Angleterre", t2: "RD Congo" },
+    "16-9": { t1: "Belgique", t2: "Sénégal" },
+    "16-10": { t1: "USA", t2: "Bosnie" },
+    "16-11": { t1: "Espagne", t2: "Autriche" },
+    "16-12": { t1: "Portugal", t2: "Croatie" },
+    "16-13": { t1: "Suisse", t2: "Algérie" },
+    "16-14": { t1: "Australie", t2: "Egypte" },
+    "16-15": { t1: "Argentine", t2: "Cap-Vert" },
+    "16-16": { t1: "Colombie", t2: "Ghana" }
 
 const STAGE_ORDERS = {
     '16': [1, 4, 3, 6, 12, 11, 10, 9, 2, 5, 7, 8, 15, 14, 13, 16],
@@ -249,17 +290,8 @@ function populateAvatars() {
     if (accSelect) accSelect.innerHTML = optionsHTML;
 }
 
-/* ============================================================
-   RECHARGEMENT AUTOMATIQUE PÉRIODIQUE — de nombreux visiteurs
-   laissent l'onglet ouvert sans jamais rafraîchir manuellement et
-   passent donc à côté des mises à jour (nouveaux scores, nouvelle
-   version du site...). On recharge donc la page toute seule à
-   intervalle régulier, MAIS on vérifie d'abord que l'utilisateur
-   n'est pas en train de saisir un pronostic ou un champ de compte :
-   si c'est le cas, on retente plus tard au lieu de l'interrompre.
-   ============================================================ */
-const AUTO_RELOAD_INTERVAL_MS = 10 * 60 * 1000; // toutes les 10 minutes
-const AUTO_RELOAD_RETRY_MS = 45 * 1000;         // nouvelle tentative 45s après si l'utilisateur est occupé
+const AUTO_RELOAD_INTERVAL_MS = 10 * 60 * 1000; 
+const AUTO_RELOAD_RETRY_MS = 45 * 1000;         
 
 function scheduleAutoReload(delay = AUTO_RELOAD_INTERVAL_MS) {
     setTimeout(() => {
@@ -267,7 +299,6 @@ function scheduleAutoReload(delay = AUTO_RELOAD_INTERVAL_MS) {
         const active = document.activeElement;
         const isTyping = active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName);
         if (modalOpen || isTyping) {
-            // Utilisateur occupé : on ne coupe rien, on réessaiera bientôt.
             scheduleAutoReload(AUTO_RELOAD_RETRY_MS);
         } else {
             window.location.reload();
@@ -301,11 +332,6 @@ function renderStatusBadgeHTML(context) {
     return `<span class="status-badge live">À venir</span>`;
 }
 
-/* ============================================================
-   TOASTS — remplacent les alert() natifs bloquants par des
-   notifications visuelles non bloquantes, empilées en bas à
-   droite de l'écran et auto-disparaissantes.
-   ============================================================ */
 const TOAST_ICONS = { success: '✅', error: '⚠️', warning: '🔒', info: 'ℹ️' };
 
 function showToast(message, type = 'info', duration = 4500) {
@@ -330,11 +356,6 @@ function showToast(message, type = 'info', duration = 4500) {
     setTimeout(dismiss, duration);
 }
 
-/* ============================================================
-   BADGE "MON PRONO" — petit macaron discret affiché sur chaque
-   carte de match, indiquant le pronostic personnel du joueur
-   connecté (ou son absence). Invisible si personne n'est connecté.
-   ============================================================ */
 function renderMyPronoBadgeHTML(matchId) {
     const session = getSession();
     if (!session) return '';
@@ -358,20 +379,13 @@ async function loadMyPronostics() {
     }
 }
 
-/* ============================================================
-   RÉVÉLATION DU RANG — grand affichage temporaire du rang du
-   joueur connecté (or/argent/bronze pour le podium, couleur
-   neutre sinon), déclenché à chaque connexion et à chaque
-   chargement de page. S'efface automatiquement après quelques
-   secondes, ou immédiatement si l'utilisateur clique dessus.
-   ============================================================ */
 let rankRevealTimer = null;
 
 function showRankReveal() {
     const session = getSession();
     if (!session) return;
     const myStats = globalRankList.find(p => p.pseudo === session.pseudo);
-    if (!myStats) return; // pas encore de classement calculé pour ce joueur
+    if (!myStats) return; 
 
     const overlay = document.getElementById('rank-reveal-overlay');
     const numberEl = document.getElementById('rank-reveal-number');
@@ -399,13 +413,6 @@ function dismissRankReveal() {
     setTimeout(() => { overlay.style.display = 'none'; }, 450);
 }
 
-/* ============================================================
-   SESSION LOCALE — wrapper autour du localStorage.
-   La session locale ne sert qu'à savoir QUI est connecté sur cet
-   appareil ; elle n'est JAMAIS la source de vérité pour les
-   données de profil (pseudo / avatar) : celles-ci sont toujours
-   relues depuis Supabase (voir updateAccountDashboard).
-   ============================================================ */
 function getSession() {
     const pseudo = localStorage.getItem('wc_pseudo');
     if (!pseudo) return null;
@@ -423,8 +430,6 @@ function setSession({ pseudo, code, avatar }) {
 }
 
 function clearSession() {
-    // On ne vide QUE les clés de session (pas localStorage.clear(),
-    // qui effaçait aussi par erreur la préférence de thème sombre/clair).
     localStorage.removeItem('wc_pseudo');
     localStorage.removeItem('wc_code');
     localStorage.removeItem('wc_avatar');
@@ -537,8 +542,6 @@ async function updateAccountDashboard() {
         return;
     }
 
-    // SOURCE DE VÉRITÉ = SUPABASE. On ne fait jamais confiance au localStorage
-    // pour le pseudo/avatar affichés : on relit toujours la ligne actuelle.
     const { data: dbUser, error: userError } = await supabaseClient
         .from('users').select('pseudo, avatar').eq('pseudo', session.pseudo).maybeSingle();
 
@@ -548,9 +551,6 @@ async function updateAccountDashboard() {
     }
 
     if (!dbUser) {
-        // Le compte associé à cette session n'existe plus en base (supprimé,
-        // ou renommé depuis un autre appareil) : on nettoie la session locale
-        // plutôt que d'afficher des données fantômes.
         clearSession();
         updateAuthUI();
         if (loggedOutView) loggedOutView.style.display = 'block';
@@ -558,7 +558,6 @@ async function updateAccountDashboard() {
         return;
     }
 
-    // Si l'avatar a changé ailleurs (autre appareil), on resynchronise le cache local.
     if (dbUser.avatar && dbUser.avatar !== session.avatar) {
         localStorage.setItem('wc_avatar', dbUser.avatar);
         session.avatar = dbUser.avatar;
@@ -632,9 +631,6 @@ async function saveAccountChanges() {
     if (saveBtn) { saveBtn.disabled = true; saveBtn.innerText = "Enregistrement..."; }
 
     try {
-        // ÉTAPE 1 — Re-vérifier l'identité à partir de la base (jamais depuis
-        // le localStorage, qui peut être périmé). Cela isole clairement les
-        // erreurs "session invalide" des erreurs "écriture refusée".
         const { data: dbUser, error: fetchError } = await supabaseClient
             .from('users').select('pseudo, code, avatar').eq('pseudo', session.pseudo).maybeSingle();
 
@@ -651,7 +647,6 @@ async function saveAccountChanges() {
             return;
         }
 
-        // ÉTAPE 2 — Unicité du pseudo si modifié.
         if (newPseudo !== session.pseudo) {
             const { data: existing, error: checkError } = await supabaseClient
                 .from('users').select('pseudo').eq('pseudo', newPseudo).maybeSingle();
@@ -661,11 +656,6 @@ async function saveAccountChanges() {
 
         const newHashedCode = await hashString(newCode);
 
-        // ÉTAPE 3 — Écriture en base. On filtre uniquement sur l'ANCIEN pseudo
-        // (déjà authentifié à l'étape 1) et on demande à Supabase de renvoyer
-        // la ligne modifiée via .select() : c'est le SEUL moyen fiable de
-        // savoir si l'UPDATE a réellement modifié une ligne, ou si elle a été
-        // silencieusement ignorée (0 ligne correspondante / policy RLS).
         const { data: updatedRows, error: updateError } = await supabaseClient
             .from('users')
             .update({ pseudo: newPseudo, code: newHashedCode, avatar: newAvatar })
@@ -678,13 +668,10 @@ async function saveAccountChanges() {
             return;
         }
         if (!updatedRows || updatedRows.length === 0) {
-            showToast("La mise à jour n'a pas pu être appliquée (aucune ligne modifiée côté serveur). C'est très probablement un problème de droits d'accès Supabase : vérifiez qu'une policy RLS 'UPDATE' autorisant le rôle anon existe bien sur la table 'users'.", "error", 8000);
+            showToast("La mise à jour n'a pas pu être appliquée (aucune ligne modifiée côté serveur).", "error", 8000);
             return;
         }
 
-        // ÉTAPE 4 — Propager le changement vers les pronostics existants
-        // (la table 'pronostics' référence le pseudo et le code par valeur,
-        // pas par clé étrangère). On le fait seulement si pseudo/code ont changé.
         if (newPseudo !== session.pseudo) {
             const { data: updatedPronos, error: pronoError } = await supabaseClient
                 .from('pronostics')
@@ -693,20 +680,10 @@ async function saveAccountChanges() {
                 .select();
 
             if (pronoError) {
-                showToast("Votre profil a bien été mis à jour, mais la synchronisation de vos pronostics existants a échoué : " + pronoError.message + ". Contactez l'administrateur si vos points semblent incorrects par la suite.", "error", 8000);
-            } else if (updatedPronos && updatedPronos.length === 0) {
-                // 0 ligne modifiée n'est pas forcément une erreur (le joueur n'a peut-être
-                // encore déposé aucun pronostic) — si on sait qu'il en a, c'est suspect.
-                const { count } = await supabaseClient
-                    .from('pronostics').select('*', { count: 'exact', head: true }).eq('pseudo', session.pseudo);
-                if (count && count > 0) {
-                    showToast("Votre profil a été mis à jour, mais aucun pronostic n'a pu être resynchronisé (probablement une policy RLS 'UPDATE' manquante sur la table 'pronostics'). Vos anciens pronostics restent associés à votre ancien pseudo/code — contactez l'administrateur.", "warning", 8000);
-                }
+                showToast("Votre profil a bien été mis à jour, mais la synchronisation de vos pronostics existants a échoué. Contactez l'administrateur.", "error", 8000);
             }
         }
 
-        // ÉTAPE 5 — On ne met à jour la session locale QU'APRÈS confirmation
-        // réelle de l'écriture en base (updatedRows.length > 0 ci-dessus).
         setSession({ pseudo: newPseudo, code: newCode, avatar: newAvatar });
 
         showToast("Compte mis à jour avec succès !", "success");
@@ -797,7 +774,6 @@ async function openMatchModal(matchId, t1, t2) {
         document.getElementById('prono-s1').value = ''; document.getElementById('prono-s2').value = '';
     }
 
-    // Réinitialisation du panneau de tendances (il sera regénéré à la demande, sur clic).
     currentMatchPronosticsData = [];
     const trendsPanel = document.getElementById('prono-trends-panel');
     if (trendsPanel) trendsPanel.style.display = 'none';
@@ -820,8 +796,6 @@ async function loadMatchPronostics(matchId) {
     const { data, error } = await supabaseClient.from('pronostics').select('*').eq('match_id', matchId);
     if (error) { container.innerHTML = "Erreur."; return; }
 
-    // On garde les pronostics en mémoire pour pouvoir générer le diagramme de
-    // tendances instantanément, sans nouvel aller-retour réseau au clic.
     currentMatchPronosticsData = data || [];
 
     if (!data || data.length === 0) { container.innerHTML = "Aucun pronostic déposé."; return; }
@@ -836,12 +810,6 @@ async function loadMatchPronostics(matchId) {
     }).join('');
 }
 
-/* ============================================================
-   DIAGRAMME DE TENDANCES — montre, pour le match actif, comment
-   la ligue de pronostiqueurs se répartit entre victoire équipe 1,
-   match nul, victoire équipe 2, ainsi que les scores les plus
-   pronostiqués. Généré à la demande (bouton "📈 Tendances").
-   ============================================================ */
 function toggleProTrends() {
     const panel = document.getElementById('prono-trends-panel');
     const btn = document.getElementById('stats-toggle-btn');
@@ -909,8 +877,6 @@ async function saveUserPronostic() {
     const ctx = getMatchTimeContext(currentActiveMatchId);
     if (ctx.status === 'complete' || (ctx.iso && new Date() >= new Date(ctx.iso))) { showToast("Ce match est verrouillé : il a débuté ou est déjà terminé.", "warning"); return; }
 
-    const hashedUserCode = await hashString(session.code);
-
     const { error } = await supabaseClient.from('pronostics').upsert({
         match_id: currentActiveMatchId, pseudo: session.pseudo, predicted_score1: parseInt(s1), predicted_score2: parseInt(s2), updated_at: new Date()
     }, { onConflict: 'match_id, pseudo' });
@@ -966,7 +932,6 @@ async function calculateLeaderboard() {
 
     globalRankList = rankList; 
 
-    // GÉNÉRATION DYNAMIQUE DE L'ANIMATION DU PODIUM
     let leaderboardSection = document.getElementById('sec-LEADERBOARD');
     if (leaderboardSection) {
         let card = leaderboardSection.querySelector('.card');
@@ -980,7 +945,6 @@ async function calculateLeaderboard() {
                 const top3 = rankList.slice(0, 3);
                 let podiumHTML = '';
                 
-                // Ordre d'affichage visuel standardisé : 2ème (gauche), 1er (centre), 3ème (droite)
                 const visualMapping = [1, 0, 2];
                 visualMapping.forEach(idx => {
                     const p = top3[idx];
@@ -1027,7 +991,9 @@ async function calculateLeaderboard() {
 }
 
 function calculate() {
-    let groupStandings = {}; let allGroupsDone = true; tree = {}; 
+    let groupStandings = {}; 
+    let allGroupsDone = true; 
+    tree = {}; 
 
     for (let l in TEAMS) {
         let sData = TEAMS[l].map(name => ({ name, pts: 0, diff: 0, bp: 0 })); let matchesPlayed = 0;
@@ -1050,50 +1016,24 @@ function calculate() {
                 <tr class="${(i < 2 && isComplete) ? 'qualified' : ''}"><td>${i+1}</td><td>${formatTeamName(t.name)}</td><td><strong>${t.pts}</strong></td><td>${t.diff}</td></tr>`).join("");
         }
     }
-    buildKnockoutTree(groupStandings, allGroupsDone);
-    processStage(16, '16', '8'); processStage(8, '8', '4'); processStage(4, '4', '2'); processStage(2, '2', 'F'); processStage(1, '3', null); processStage(1, 'F', 'CHAMPION');
+
+    // Initialisation forcée de la phase finale 
+    for (let i = 1; i <= 16; i++) {
+        const matchKey = `16-${i}`;
+        if (MANUAL_KNOCKOUT_TEAMS[matchKey]) {
+            tree[`${matchKey}-t1`] = MANUAL_KNOCKOUT_TEAMS[matchKey].t1;
+            tree[`${matchKey}-t2`] = MANUAL_KNOCKOUT_TEAMS[matchKey].t2;
+        }
+    }
+
+    processStage(16, '16', '8'); 
+    processStage(8, '8', '4'); 
+    processStage(4, '4', '2'); 
+    processStage(2, '2', 'F'); 
+    processStage(1, '3', null); 
+    processStage(1, 'F', 'CHAMPION');
+    
     updateKnockoutUI();
-}
-
-function buildKnockoutTree(standings, allGroupsDone) {
-    let bestThirds = [];
-    if (allGroupsDone) {
-        for (let l in standings) {
-            if (standings[l].teams[2]) {
-                bestThirds.push({ name: standings[l].teams[2].name, group: l, pts: standings[l].teams[2].pts, diff: standings[l].teams[2].diff, bp: standings[l].teams[2].bp });
-            }
-        }
-        bestThirds.sort((a, b) => b.pts - a.pts || b.diff - a.diff || b.bp - a.bp); bestThirds = bestThirds.slice(0, 8);
-    }
-
-    let thirdAssignments = Array(8).fill('');
-    if (allGroupsDone && bestThirds.length === 8) {
-        const targets = ['E', 'I', 'A', 'L', 'G', 'D', 'B', 'K']; let pool = [...bestThirds];
-        for (let i = 0; i < 8; i++) {
-            let matchIdx = pool.findIndex(t => t.group !== targets[i]); if (matchIdx === -1) matchIdx = 0; 
-            thirdAssignments[i] = pool[matchIdx].name; pool.splice(matchIdx, 1); 
-        }
-    }
-
-    const getTeam = (groupLetter, rank) => {
-        if (standings[groupLetter] && standings[groupLetter].isComplete) return standings[groupLetter].teams[rank]?.name || '';
-        return '';
-    };
-
-    const config = [
-        { t1: getTeam('A', 1), t2: getTeam('B', 1) }, { t1: getTeam('C', 0), t2: getTeam('F', 1) },        
-        { t1: getTeam('E', 0), t2: thirdAssignments[0] }, { t1: getTeam('F', 0), t2: getTeam('C', 1) },        
-        { t1: getTeam('E', 1), t2: getTeam('I', 1) }, { t1: getTeam('I', 0), t2: thirdAssignments[1] },    
-        { t1: getTeam('A', 0), t2: thirdAssignments[2] }, { t1: getTeam('L', 0), t2: thirdAssignments[3] },    
-        { t1: getTeam('G', 0), t2: thirdAssignments[4] }, { t1: getTeam('D', 0), t2: thirdAssignments[5] },    
-        { t1: getTeam('H', 0), t2: getTeam('J', 1) }, { t1: getTeam('K', 1), t2: getTeam('L', 1) },        
-        { t1: getTeam('B', 0), t2: thirdAssignments[6] }, { t1: getTeam('D', 1), t2: getTeam('G', 1) },        
-        { t1: getTeam('J', 0), t2: getTeam('H', 1) }, { t1: getTeam('K', 0), t2: thirdAssignments[7] }     
-    ];
-
-    config.forEach((match, idx) => {
-        tree[`16-${idx + 1}-t1`] = match.t1; tree[`16-${idx + 1}-t2`] = match.t2;
-    });
 }
 
 function processStage(count, curr, next) {
@@ -1225,11 +1165,6 @@ function exportData() {
     document.getElementById('io-text').value = out.join("\n");
 }
 
-/* ============================================================
-   NAVIGATION RAPIDE DANS L'ARBRE — fait défiler horizontalement
-   le conteneur du bracket pour amener la colonne cible
-   (seizièmes, huitièmes, ...) bien au centre de la vue.
-   ============================================================ */
 function scrollToBracketColumn(targetId, btnEl, smooth = true) {
     document.querySelectorAll('.jump-btn').forEach(b => b.classList.remove('active'));
     if (btnEl) btnEl.classList.add('active');
@@ -1244,13 +1179,6 @@ function scrollToBracketColumn(targetId, btnEl, smooth = true) {
     wrapper.scrollTo({ left: wrapper.scrollLeft + delta, behavior: smooth ? 'smooth' : 'auto' });
 }
 
-/* ============================================================
-   CENTRAGE AUTOMATIQUE SUR LA PHASE EN COURS — quand on ouvre
-   l'onglet "Phase Finale", on détecte la première phase dont
-   tous les matchs ne sont pas encore terminés (16e, 8e, quarts,
-   demies, finale) et on centre directement l'arbre dessus, au
-   lieu de toujours repartir des seizièmes.
-   ============================================================ */
 const BRACKET_STAGE_SEQUENCE = [
     { label: '16', count: 16, colId: 'col-16' },
     { label: '8', count: 8, colId: 'col-8' },
@@ -1270,12 +1198,10 @@ function getCurrentBracketColId() {
     for (const stage of BRACKET_STAGE_SEQUENCE) {
         if (!isStageComplete(stage.label, stage.count)) return stage.colId;
     }
-    return 'col-final'; // tournoi entièrement terminé : on reste sur la finale
+    return 'col-final'; 
 }
 
 function centerBracketOnCurrentStage() {
-    // Léger délai pour laisser le navigateur appliquer le display:block
-    // de la section avant de mesurer les positions à centrer.
     setTimeout(() => {
         const colId = getCurrentBracketColId();
         const btn = document.querySelector(`.jump-btn[data-target="${colId}"]`);
