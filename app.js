@@ -132,14 +132,14 @@ const MANUAL_KNOCKOUT_TEAMS = {
     "16-3": { t1: "Allemagne", t2: "Paraguay" },
     "16-4": { t1: "Pays-Bas", t2: "Maroc" },
     "16-5": { t1: "Cote dIvoire", t2: "Norvège" },
-    "16-6": { t1: "France", t2: "Suede" },
+    "16-6": { t1: "France", t2: "Suède" },
     "16-7": { t1: "Mexique", t2: "Equateur" },
     "16-8": { t1: "Angleterre", t2: "RD Congo" },
-    "16-9": { t1: "Belgique", t2: "Senegal" },
+    "16-9": { t1: "Belgique", t2: "Sénégal" },
     "16-10": { t1: "USA", t2: "Bosnie" },
     "16-11": { t1: "Espagne", t2: "Autriche" },
     "16-12": { t1: "Portugal", t2: "Croatie" },
-    "16-13": { t1: "Suisse", t2: "Algerie" },
+    "16-13": { t1: "Suisse", t2: "Algérie" },
     "16-14": { t1: "Australie", t2: "Egypte" },
     "16-15": { t1: "Argentine", t2: "Cap-Vert" },
     "16-16": { t1: "Colombie", t2: "Ghana" }
@@ -185,6 +185,8 @@ let currentActiveMatchId = null;
 let globalRankList = []; 
 let myPronostics = {};
 let currentMatchPronosticsData = [];
+let presenceChannel = null;
+let onlineUsers = new Set();
 
 const KNOCKOUT_LINKS = {
     '16-1': { nextId: 1, nextPos: 't1' }, '16-4': { nextId: 1, nextPos: 't2' },
@@ -214,22 +216,22 @@ const KNOCKOUT_LINKS = {
 const TROPHIES = [
     {
         id: 'points', icon: '⭐', label: 'Buteur de Légende',
-        thresholds: [10, 50, 80], unit: 'pts',
+        thresholds: [30, 100, 250], unit: 'pts',
         getValue: p => p.totalPoints || 0
     },
     {
         id: 'exacts', icon: '🎯', label: "Tireur d'Élite",
-        thresholds: [1, 4, 7], unit: 'scores exacts',
+        thresholds: [3, 8, 15], unit: 'scores exacts',
         getValue: p => p.exacts || 0
     },
     {
         id: 'diffs', icon: '📐', label: 'Stratège',
-        thresholds: [2, 5, 10], unit: 'bonnes différences',
+        thresholds: [3, 8, 15], unit: 'bonnes différences',
         getValue: p => p.diffs || 0
     },
     {
         id: 'pronos', icon: '📅', label: 'Assidu',
-        thresholds: [10, 20, 30], unit: 'pronostics déposés',
+        thresholds: [15, 40, 80], unit: 'pronostics déposés',
         getValue: p => p.totalPronos || 0
     },
     {
@@ -473,6 +475,7 @@ async function init() {
     renderGroupsSection(['G','H','I','J','K','L'], 'sec-G2');
     renderKnockoutContainers();
     setupLeaderboardProfileLinks();
+    setupPresence();
     await syncFromSupabase();
     if (getSession()) showRankReveal();
     restoreScrollState();
@@ -558,6 +561,7 @@ function showRankReveal() {
     numberEl.className = `rank-reveal-number ${colorClass}`;
     numberEl.innerText = `#${myStats.rank}`;
     pointsEl.innerText = `${myStats.pseudo} — ${myStats.totalPoints} pt${myStats.totalPoints === 1 ? '' : 's'}`;
+    renderNextRivalText('rank-reveal-next', session.pseudo);
 
     overlay.style.display = 'flex';
     requestAnimationFrame(() => overlay.classList.add('show'));
@@ -610,6 +614,7 @@ async function handleAuth() {
             setSession({ pseudo, code, avatar: user.avatar || '⚽' });
             updateAuthUI();
             await loadMyPronostics(); calculate();
+            refreshMyPresence();
             showToast(`Bon retour, ${pseudo} !`, "success");
             showRankReveal();
             if (document.getElementById('sec-account').classList.contains('active')) await updateAccountDashboard();
@@ -621,6 +626,7 @@ async function handleAuth() {
             setSession({ pseudo, code, avatar });
             updateAuthUI(); await calculateLeaderboard();
             await loadMyPronostics(); calculate();
+            refreshMyPresence();
             showToast(`Bienvenue ${pseudo}, votre compte a été créé !`, "success");
             showRankReveal();
             if (document.getElementById('sec-account').classList.contains('active')) await updateAccountDashboard();
@@ -633,6 +639,7 @@ function handleLogout() {
     updateAuthUI(); 
     myPronostics = {};
     calculate();
+    refreshMyPresence();
     if (document.getElementById('sec-account').classList.contains('active')) updateAccountDashboard();
 }
 
@@ -732,10 +739,12 @@ async function updateAccountDashboard() {
         document.getElementById('acc-stat-rank').innerText = `#${myStats.rank}`;
         document.getElementById('acc-stat-pts').innerText = `${myStats.totalPoints} pts`;
         document.getElementById('acc-stat-details').innerText = `Détails : ${myStats.exacts} exacts | ${myStats.diffs} écarts | ${myStats.partials} issues`;
+        renderNextRivalText('acc-next-rival', session.pseudo);
     } else {
         document.getElementById('acc-stat-rank').innerText = `--`;
         document.getElementById('acc-stat-pts').innerText = `0 pts`;
         document.getElementById('acc-stat-details').innerText = `Aucun match calculé`;
+        document.getElementById('acc-next-rival').innerText = '';
     }
     renderTrophyGrid('acc-trophy-section', myStats);
 
@@ -957,10 +966,88 @@ function openProfileModal(pseudo) {
     document.getElementById('profile-stat-details').innerText = `Détails : ${player.exacts} exacts | ${player.diffs} écarts | ${player.partials} issues`;
     renderTrophyGrid('profile-trophy-section', player);
 
+    const profileStatus = document.getElementById('profile-presence-status');
+    if (profileStatus) { profileStatus.dataset.pseudo = player.pseudo; }
+    updatePresenceDots();
+
     document.getElementById('profile-modal').style.display = 'flex';
 }
 
 function closeProfileModal() { document.getElementById('profile-modal').style.display = 'none'; }
+
+/* ===========================================================
+   PRÉSENCE EN LIGNE (Supabase Realtime Presence)
+   Aucune table nécessaire : état éphémère partagé via un channel.
+   Tout le monde (connecté ou non) peut OBSERVER qui est en ligne ;
+   seuls les utilisateurs connectés apparaissent dans la liste.
+   =========================================================== */
+function setupPresence() {
+    if (presenceChannel) return;
+    presenceChannel = supabaseClient.channel('online-users');
+
+    presenceChannel.on('presence', { event: 'sync' }, () => {
+        const state = presenceChannel.presenceState();
+        const pseudos = new Set();
+        Object.values(state).forEach(metas => metas.forEach(m => { if (m.pseudo) pseudos.add(m.pseudo); }));
+        onlineUsers = pseudos;
+        updatePresenceDots();
+    });
+
+    presenceChannel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') refreshMyPresence();
+    });
+}
+
+async function refreshMyPresence() {
+    if (!presenceChannel) return;
+    const session = getSession();
+    try {
+        if (session) {
+            await presenceChannel.track({ pseudo: session.pseudo, online_at: new Date().toISOString() });
+        } else {
+            await presenceChannel.untrack();
+        }
+    } catch (e) { /* le channel n'est pas encore prêt : ignorer */ }
+}
+
+function updatePresenceDots() {
+    document.querySelectorAll('[data-presence-pseudo]').forEach(el => {
+        el.classList.toggle('online', onlineUsers.has(el.dataset.presencePseudo));
+    });
+    const profileStatus = document.getElementById('profile-presence-status');
+    if (profileStatus && profileStatus.dataset.pseudo) {
+        const isOnline = onlineUsers.has(profileStatus.dataset.pseudo);
+        profileStatus.innerHTML = `<span class="presence-dot ${isOnline ? 'online' : ''}"></span>${isOnline ? 'En ligne' : 'Hors ligne'}`;
+    }
+}
+
+/* ===========================================================
+   "RIVAL SUIVANT" : combien de points pour dépasser le joueur
+   juste au-dessus dans le classement (calculé depuis globalRankList,
+   déjà trié — aucune requête supplémentaire nécessaire).
+   =========================================================== */
+function getNextRivalInfo(pseudo) {
+    const idx = globalRankList.findIndex(p => p.pseudo === pseudo);
+    if (idx <= 0) return null;
+    const me = globalRankList[idx];
+    for (let i = idx - 1; i >= 0; i--) {
+        if (globalRankList[i].totalPoints > me.totalPoints) {
+            return { pseudo: globalRankList[i].pseudo, diff: globalRankList[i].totalPoints - me.totalPoints };
+        }
+    }
+    return null;
+}
+
+function renderNextRivalText(containerId, pseudo) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const rival = getNextRivalInfo(pseudo);
+    if (!rival) {
+        el.innerHTML = `Vous êtes en tête du classement 👑`;
+    } else {
+        el.innerHTML = `Plus que <strong>${rival.diff} point${rival.diff > 1 ? 's' : ''}</strong> pour dépasser <strong>${escapeHTML(rival.pseudo)}</strong> !`;
+    }
+}
 
 function setupLeaderboardProfileLinks() {
     const tbody = document.getElementById('leaderboard-tbody');
@@ -1038,18 +1125,33 @@ function renderProTrendsChart() {
     const t1Name = (document.getElementById('modal-t1-name').innerText || 'Équipe 1').trim();
     const t2Name = (document.getElementById('modal-t2-name').innerText || 'Équipe 2').trim();
 
-    const bar = (label, count, color) => `
-        <div class="trend-bar-row">
-            <span class="trend-bar-label" title="${label}">${label}</span>
-            <div class="trend-bar-track"><div class="trend-bar-fill" style="width:${pct(count)}%; background:${color};"></div></div>
-            <span class="trend-bar-pct">${pct(count)}%</span>
-        </div>`;
+    const mine = myPronostics[currentActiveMatchId];
+    const mySign = mine ? Math.sign(mine.s1 - mine.s2) : null;
+    const actS1 = scores[`${currentActiveMatchId}-0`], actS2 = scores[`${currentActiveMatchId}-1`];
+    const actualSign = (actS1 !== undefined && actS2 !== undefined) ? Math.sign(actS1 - actS2) : null;
+
+    const bar = (label, count, color, sign) => {
+        const isMine = mySign !== null && mySign === sign;
+        const isActual = actualSign !== null && actualSign === sign;
+        const markers = (isMine || isActual) ? `
+            <span class="trend-bar-markers">
+                ${isMine ? '<span class="trend-tag mine">👉 toi</span>' : ''}
+                ${isActual ? '<span class="trend-tag actual">🔥</span>' : ''}
+            </span>` : '';
+        return `
+            <div class="trend-bar-row">
+                <span class="trend-bar-label" title="${label}">${label}</span>
+                <div class="trend-bar-track"><div class="trend-bar-fill" style="width:${pct(count)}%; background:${color};"></div></div>
+                <span class="trend-bar-pct">${pct(count)}%</span>
+                ${markers}
+            </div>`;
+    };
 
     panel.innerHTML = `
         <div class="trends-title">Tendances sur ${total} pronostic${total > 1 ? 's' : ''}</div>
-        ${bar(t1Name, winT1, 'var(--primary)')}
-        ${bar('Match nul', draw, '#94a3b8')}
-        ${bar(t2Name, winT2, 'var(--accent)')}
+        ${bar(t1Name, winT1, 'var(--primary)', 1)}
+        ${bar('Match nul', draw, '#94a3b8', 0)}
+        ${bar(t2Name, winT2, 'var(--accent)', -1)}
         <div class="trends-top-scores">
             <span class="trends-sub">Scores les plus pronostiqués :</span>
             ${topScores.map(([score, c]) => `<span class="trend-score-chip">${score} (${c}x)</span>`).join('')}
@@ -1169,7 +1271,7 @@ async function calculateLeaderboard() {
         return `
             <tr class="${rankClass}${isMeClass}">
                 <td><strong>${stringRank}</strong></td>
-                <td><span class="leaderboard-pseudo-link" data-pseudo="${escapeHTML(player.pseudo)}"><span class="profile-avatar">${player.avatar}</span> ${escapeHTML(player.pseudo)}</span></td>
+                <td><span class="presence-dot${onlineUsers.has(player.pseudo) ? ' online' : ''}" data-presence-pseudo="${escapeHTML(player.pseudo)}"></span><span class="leaderboard-pseudo-link" data-pseudo="${escapeHTML(player.pseudo)}"><span class="profile-avatar">${player.avatar}</span> ${escapeHTML(player.pseudo)}</span></td>
                 <td style="text-align: center; color: var(--text-muted); font-weight:600;">${player.exacts}</td>
                 <td style="text-align: center; color: var(--text-muted); font-weight:600;">${player.diffs}</td>
                 <td style="text-align: center; color: var(--text-muted); font-weight:600;">${player.partials}</td>
