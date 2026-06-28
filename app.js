@@ -214,12 +214,12 @@ const KNOCKOUT_LINKS = {
 const TROPHIES = [
     {
         id: 'points', icon: '⭐', label: 'Buteur de Légende',
-        thresholds: [30, 100, 250], unit: 'pts',
+        thresholds: [10, 50, 100], unit: 'pts',
         getValue: p => p.totalPoints || 0
     },
     {
         id: 'exacts', icon: '🎯', label: "Tireur d'Élite",
-        thresholds: [3, 8, 15], unit: 'scores exacts',
+        thresholds: [2, 5, 10], unit: 'scores exacts',
         getValue: p => p.exacts || 0
     },
     {
@@ -229,7 +229,7 @@ const TROPHIES = [
     },
     {
         id: 'pronos', icon: '📅', label: 'Assidu',
-        thresholds: [15, 40, 80], unit: 'pronostics déposés',
+        thresholds: [10, 20, 40], unit: 'pronostics déposés',
         getValue: p => p.totalPronos || 0
     },
     {
