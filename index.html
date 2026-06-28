@@ -39,12 +39,12 @@
 </header>
 
 <nav class="tabs">
-    <button class="tab active" onclick="showSection('G1', this)">Groupes A–F</button>
-    <button class="tab" onclick="showSection('G2', this)">Groupes G–L</button>
-    <button class="tab" onclick="showSection('KO', this); centerBracketOnCurrentStage();">Phase Finale</button>
-    <button class="tab" onclick="showSection('LEADERBOARD', this)">🏆 Classement</button>
-    <button class="tab" onclick="showSection('account', this); updateAccountDashboard();">👤 Mon Compte</button>
-    <button class="tab tab-desktop-only" onclick="showSection('IO', this)">Console Admin</button>
+    <button class="tab active" data-section-id="G1" onclick="showSection('G1', this)">Groupes A–F</button>
+    <button class="tab" data-section-id="G2" onclick="showSection('G2', this)">Groupes G–L</button>
+    <button class="tab" data-section-id="KO" onclick="showSection('KO', this); centerBracketOnCurrentStage();">Phase Finale</button>
+    <button class="tab" data-section-id="LEADERBOARD" onclick="showSection('LEADERBOARD', this)">🏆 Classement</button>
+    <button class="tab" data-section-id="account" onclick="showSection('account', this); updateAccountDashboard();">👤 Mon Compte</button>
+    <button class="tab tab-desktop-only" data-section-id="IO" onclick="showSection('IO', this)">Console Admin</button>
 </nav>
 
 <main class="main">
@@ -97,6 +97,11 @@
                 </div>
             </div>
             <div id="acc-stat-details" class="stat-details"></div>
+
+            <hr class="divider">
+
+            <h3 class="subsection-title">🏆 Mes Trophées</h3>
+            <div id="acc-trophy-section" class="trophy-section"></div>
 
             <hr class="divider">
 
@@ -244,6 +249,38 @@
                     <button class="btn-submit-prono" onclick="saveUserPronostic()">Valider mon pronostic</button>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<div id="profile-modal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="modal-header">
+            <span class="modal-title">Profil du joueur</span>
+            <button class="close-modal-btn" onclick="closeProfileModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="profile-header">
+                <div id="profile-avatar" class="profile-avatar-big">⚽</div>
+                <div id="profile-pseudo" class="profile-pseudo-big">—</div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span class="stat-label">Rang actuel</span>
+                    <div id="profile-stat-rank" class="stat-value primary-color">--</div>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Total Points</span>
+                    <div id="profile-stat-pts" class="stat-value accent-color">-- pts</div>
+                </div>
+            </div>
+            <div id="profile-stat-details" class="stat-details"></div>
+
+            <hr class="divider">
+
+            <h3 class="subsection-title">🏆 Trophées</h3>
+            <div id="profile-trophy-section" class="trophy-section"></div>
         </div>
     </div>
 </div>

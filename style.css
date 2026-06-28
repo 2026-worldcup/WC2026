@@ -17,6 +17,7 @@
     --header-bg: linear-gradient(120deg, #0f2557 0%, #6c1947 55%, #ff0055 100%);
     --silver: #aab4c0;
     --bronze: #cd7f32;
+    --success: #16a34a;
 }
 
 body.dark-mode {
@@ -89,6 +90,10 @@ body { font-family: 'Montserrat', system-ui, sans-serif; background: var(--bg-bo
 .leaderboard-table tr.rank-row-gold td { color: var(--gold); font-weight: 800; }
 .leaderboard-table tr.rank-row-silver td { color: var(--silver); font-weight: 800; }
 .leaderboard-table tr.rank-row-bronze td { color: var(--bronze); font-weight: 800; }
+.leaderboard-table tr.is-me td { background: rgba(22, 163, 74, 0.13); }
+.leaderboard-table tr.is-me td:first-child { border-left: 4px solid var(--success); }
+.leaderboard-pseudo-link { cursor: pointer; border-bottom: 1px dashed currentColor; opacity: 0.95; }
+.leaderboard-pseudo-link:hover { color: var(--accent); border-bottom-color: var(--accent); }
 
 /* CARDS MATCHS & STATUTS BADGES */
 .group-grid.active { display: grid; grid-template-columns: 1fr; gap: 20px; }
@@ -216,6 +221,29 @@ body.dark-mode .prono-val { color: #38bdf8; }
 .btn-submit-prono { width: 100%; background: #16a34a; color: white; border: none; padding: 12px; font-weight: 700; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
 .lock-alert-message { background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.2); text-align: center; margin-bottom: 12px; }
 
+/* GRADE & TROPHÉES */
+.grade-banner { display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, var(--primary), #1e293b); color: #fff; padding: 14px 18px; border-radius: 12px; margin-bottom: 16px; }
+.grade-icon { font-size: 2.2rem; line-height: 1; flex-shrink: 0; }
+.grade-name { font-size: 1.1rem; font-weight: 800; }
+.grade-progress { font-size: 0.78rem; opacity: 0.85; font-weight: 600; margin-top: 2px; }
+
+.trophy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.trophy-card { display: flex; gap: 10px; align-items: flex-start; background: var(--bg-match); border: 1px solid var(--border); border-radius: 10px; padding: 12px; opacity: 0.5; filter: grayscale(0.6); }
+.trophy-card.trophy-bronze, .trophy-card.trophy-silver, .trophy-card.trophy-gold { opacity: 1; filter: none; }
+.trophy-icon { font-size: 1.8rem; line-height: 1; flex-shrink: 0; }
+.trophy-name { font-weight: 800; font-size: 0.82rem; }
+.trophy-level-tag { display: inline-block; font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; padding: 1px 8px; border-radius: 8px; margin: 3px 0; }
+.trophy-card.trophy-locked .trophy-level-tag { background: var(--border); color: var(--text-muted); }
+.trophy-card.trophy-bronze .trophy-level-tag { background: rgba(205, 127, 50, 0.18); color: var(--bronze); }
+.trophy-card.trophy-silver .trophy-level-tag { background: rgba(170, 180, 192, 0.25); color: var(--silver); }
+.trophy-card.trophy-gold .trophy-level-tag { background: rgba(229, 184, 66, 0.22); color: var(--gold); }
+.trophy-progress { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; line-height: 1.3; }
+
+/* MODALE PROFIL JOUEUR (lecture seule) */
+.profile-header { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 18px; }
+.profile-avatar-big { font-size: 3rem; line-height: 1; }
+.profile-pseudo-big { font-size: 1.25rem; font-weight: 800; }
+
 /* SECTION PRONOSTICS — EN-TÊTE + BOUTON STATS */
 .prono-section-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
 .prono-section-header h3 { font-size: 1rem; }
@@ -320,6 +348,9 @@ body.dark-mode .prono-val { color: #38bdf8; }
     .rank-reveal-number { font-size: 3.4rem; }
     .rank-reveal-label { font-size: 0.7rem; }
     .rank-reveal-points { font-size: 0.9rem; }
+    .trophy-grid { grid-template-columns: 1fr; }
+    .grade-banner { padding: 12px 14px; gap: 10px; }
+    .grade-icon { font-size: 1.8rem; }
 }
 
 @media (min-width: 769px) {

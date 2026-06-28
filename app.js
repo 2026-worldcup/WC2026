@@ -131,15 +131,15 @@ const MANUAL_KNOCKOUT_TEAMS = {
     "16-2": { t1: "Bresil", t2: "Japon" },
     "16-3": { t1: "Allemagne", t2: "Paraguay" },
     "16-4": { t1: "Pays-Bas", t2: "Maroc" },
-    "16-5": { t1: "Cote dIvoire", t2: "Norvege" },
-    "16-6": { t1: "France", t2: "Suede" },
+    "16-5": { t1: "Cote dIvoire", t2: "Norvège" },
+    "16-6": { t1: "France", t2: "Suède" },
     "16-7": { t1: "Mexique", t2: "Equateur" },
     "16-8": { t1: "Angleterre", t2: "RD Congo" },
-    "16-9": { t1: "Belgique", t2: "Senegal" },
+    "16-9": { t1: "Belgique", t2: "Sénégal" },
     "16-10": { t1: "USA", t2: "Bosnie" },
     "16-11": { t1: "Espagne", t2: "Autriche" },
     "16-12": { t1: "Portugal", t2: "Croatie" },
-    "16-13": { t1: "Suisse", t2: "Algerie" },
+    "16-13": { t1: "Suisse", t2: "Algérie" },
     "16-14": { t1: "Australie", t2: "Egypte" },
     "16-15": { t1: "Argentine", t2: "Cap-Vert" },
     "16-16": { t1: "Colombie", t2: "Ghana" }
@@ -204,6 +204,130 @@ const KNOCKOUT_LINKS = {
     '2-1': { nextId: 1, nextPos: 't1' }, '2-2': { nextId: 1, nextPos: 't2' }
 };
 
+/* ===========================================================
+   SYSTÈME DE TROPHÉES & GRADE DE JOUEUR
+   100% calculé à partir des stats déjà existantes (totalPoints,
+   exacts, diffs, partials, totalPronos, rank) — aucune table
+   Supabase supplémentaire n'est nécessaire. Les seuils ci-dessous
+   sont de simples constantes ajustables.
+   =========================================================== */
+const TROPHIES = [
+    {
+        id: 'points', icon: '⭐', label: 'Buteur de Légende',
+        thresholds: [30, 100, 250], unit: 'pts',
+        getValue: p => p.totalPoints || 0
+    },
+    {
+        id: 'exacts', icon: '🎯', label: "Tireur d'Élite",
+        thresholds: [3, 8, 15], unit: 'scores exacts',
+        getValue: p => p.exacts || 0
+    },
+    {
+        id: 'diffs', icon: '📐', label: 'Stratège',
+        thresholds: [3, 8, 15], unit: 'bonnes différences',
+        getValue: p => p.diffs || 0
+    },
+    {
+        id: 'pronos', icon: '📅', label: 'Assidu',
+        thresholds: [15, 40, 80], unit: 'pronostics déposés',
+        getValue: p => p.totalPronos || 0
+    },
+    {
+        id: 'rank', icon: '🏅', label: 'Haut du Classement',
+        getValue: p => p.rank || 9999,
+        // Le rang est relatif au nombre de joueurs en lice : pas de seuils fixes.
+        levelFn: (p, ctx) => {
+            if (!p.rank) return 0;
+            const total = Math.max(1, ctx.totalPlayers || 1);
+            if (p.rank <= 3) return 3;
+            if (p.rank <= Math.max(1, Math.ceil(total * 0.25))) return 2;
+            if (p.rank <= Math.max(1, Math.ceil(total * 0.5))) return 1;
+            return 0;
+        },
+        progressLabel: (p, ctx) => {
+            const total = Math.max(1, ctx.totalPlayers || 1);
+            const top25 = Math.max(1, Math.ceil(total * 0.25));
+            const top50 = Math.max(1, Math.ceil(total * 0.5));
+            if (p.rank <= top25) return `Rang actuel : #${p.rank} — entrez dans le top 3 pour l'Or`;
+            if (p.rank <= top50) return `Rang actuel : #${p.rank} — visez le top ${top25} pour l'Argent`;
+            return `Rang actuel : #${p.rank || '--'} — visez le top ${top50} pour le Bronze`;
+        }
+    }
+];
+
+const GRADES = [
+    { min: 0, label: 'Débutant', icon: '🌱' },
+    { min: 3, label: 'Amateur', icon: '⚽' },
+    { min: 6, label: 'Confirmé', icon: '🥉' },
+    { min: 9, label: 'Expert', icon: '🥈' },
+    { min: 12, label: 'Champion', icon: '🥇' },
+    { min: 15, label: 'Légende', icon: '👑' }
+];
+
+function getTrophyLevel(trophy, player, context) {
+    if (trophy.levelFn) return trophy.levelFn(player, context);
+    const value = trophy.getValue(player);
+    const [t1, t2, t3] = trophy.thresholds;
+    if (value >= t3) return 3;
+    if (value >= t2) return 2;
+    if (value >= t1) return 1;
+    return 0;
+}
+
+function computeTrophies(player) {
+    const context = { totalPlayers: globalRankList.length };
+    const trophies = TROPHIES.map(t => ({ ...t, level: getTrophyLevel(t, player, context) }));
+    const totalLevels = trophies.reduce((sum, t) => sum + t.level, 0);
+    const maxLevels = TROPHIES.length * 3;
+    let grade = GRADES[0];
+    for (const g of GRADES) { if (totalLevels >= g.min) grade = g; }
+    return { trophies, totalLevels, maxLevels, grade };
+}
+
+function renderTrophyGrid(containerId, player) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    if (!player) { container.innerHTML = `<p class="desc" style="text-align:center; padding:10px;">Trophées indisponibles pour le moment.</p>`; return; }
+
+    const { trophies, totalLevels, maxLevels, grade } = computeTrophies(player);
+    const context = { totalPlayers: globalRankList.length };
+    const levelName = lvl => lvl === 3 ? 'Or' : lvl === 2 ? 'Argent' : lvl === 1 ? 'Bronze' : 'Verrouillé';
+    const levelClass = lvl => lvl === 3 ? 'trophy-gold' : lvl === 2 ? 'trophy-silver' : lvl === 1 ? 'trophy-bronze' : 'trophy-locked';
+
+    const gradeHTML = `
+        <div class="grade-banner">
+            <span class="grade-icon">${grade.icon}</span>
+            <div>
+                <div class="grade-name">${grade.label}</div>
+                <div class="grade-progress">${totalLevels} / ${maxLevels} niveaux de trophées débloqués</div>
+            </div>
+        </div>`;
+
+    const trophiesHTML = trophies.map(t => {
+        let progressText;
+        if (t.level >= 3) {
+            progressText = 'Niveau maximum atteint !';
+        } else if (t.progressLabel) {
+            progressText = t.progressLabel(player, context);
+        } else {
+            const nextThreshold = t.thresholds[Math.min(t.level, 2)];
+            const remaining = Math.max(0, nextThreshold - t.getValue(player));
+            progressText = `Encore ${remaining} ${t.unit} pour le niveau ${levelName(t.level + 1)}`;
+        }
+        return `
+            <div class="trophy-card ${levelClass(t.level)}">
+                <div class="trophy-icon">${t.icon}</div>
+                <div class="trophy-info">
+                    <div class="trophy-name">${t.label}</div>
+                    <span class="trophy-level-tag">${levelName(t.level)}</span>
+                    <div class="trophy-progress">${progressText}</div>
+                </div>
+            </div>`;
+    }).join('');
+
+    container.innerHTML = `${gradeHTML}<div class="trophy-grid">${trophiesHTML}</div>`;
+}
+
 // Fonction utilitaire asynchrone de hachage SHA-256 pour sécuriser les codes secrets
 async function hashString(str) {
     if (!str) return '';
@@ -212,6 +336,12 @@ async function hashString(str) {
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Échappe les caractères sensibles pour une insertion sûre en HTML/attribut (pseudos utilisateurs)
+function escapeHTML(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 // Initialisation de l'œil d'affichage dynamique pour le mot de passe
@@ -286,6 +416,54 @@ function scheduleAutoReload(delay = AUTO_RELOAD_INTERVAL_MS) {
     }, delay);
 }
 
+/* ===========================================================
+   PERSISTANCE DE LA POSITION EXACTE (onglet + scroll) AU RELOAD
+   Sauvegardée juste avant que la page ne se décharge (reload manuel
+   OU auto-reload programmé), restaurée à la fin de init().
+   =========================================================== */
+const SCROLL_STATE_KEY = 'wc_scroll_state';
+
+function saveScrollState() {
+    try {
+        const activeContainer = document.querySelector('.container.active');
+        const sectionId = activeContainer ? activeContainer.id.replace('sec-', '') : 'G1';
+        const bracketWrapper = document.querySelector('.bracket-scroll-wrapper');
+        const state = {
+            section: sectionId,
+            scrollY: window.scrollY,
+            bracketScrollLeft: bracketWrapper ? bracketWrapper.scrollLeft : null
+        };
+        sessionStorage.setItem(SCROLL_STATE_KEY, JSON.stringify(state));
+    } catch (e) { /* stockage indisponible : on ignore silencieusement */ }
+}
+
+function restoreScrollState() {
+    let state = null;
+    try { state = JSON.parse(sessionStorage.getItem(SCROLL_STATE_KEY)); } catch (e) { /* ignore */ }
+    if (!state) return;
+
+    if (state.section) {
+        const btn = document.querySelector(`.tab[data-section-id="${state.section}"]`);
+        if (btn) {
+            showSection(state.section, btn);
+            if (state.section === 'account') updateAccountDashboard();
+        }
+    }
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            if (typeof state.scrollY === 'number') window.scrollTo(0, state.scrollY);
+            if (state.bracketScrollLeft !== null && state.bracketScrollLeft !== undefined) {
+                const wrapper = document.querySelector('.bracket-scroll-wrapper');
+                if (wrapper) wrapper.scrollLeft = state.bracketScrollLeft;
+            }
+        });
+    });
+}
+
+window.addEventListener('beforeunload', saveScrollState);
+window.addEventListener('pagehide', saveScrollState);
+
 async function init() {
     initTheme();
     populateAvatars();
@@ -294,8 +472,10 @@ async function init() {
     renderGroupsSection(['A','B','C','D','E','F'], 'sec-G1');
     renderGroupsSection(['G','H','I','J','K','L'], 'sec-G2');
     renderKnockoutContainers();
+    setupLeaderboardProfileLinks();
     await syncFromSupabase();
     if (getSession()) showRankReveal();
+    restoreScrollState();
     scheduleAutoReload();
 }
 
@@ -557,6 +737,7 @@ async function updateAccountDashboard() {
         document.getElementById('acc-stat-pts').innerText = `0 pts`;
         document.getElementById('acc-stat-details').innerText = `Aucun match calculé`;
     }
+    renderTrophyGrid('acc-trophy-section', myStats);
 
     const now = new Date();
     const fortyEightHoursLater = new Date(now.getTime() + (48 * 60 * 60 * 1000));
@@ -765,6 +946,32 @@ async function openMatchModal(matchId, t1, t2) {
 
 function closeModal() { document.getElementById('match-modal').style.display = 'none'; }
 
+function openProfileModal(pseudo) {
+    const player = globalRankList.find(p => p.pseudo === pseudo);
+    if (!player) { showToast("Profil introuvable.", "error"); return; }
+
+    document.getElementById('profile-avatar').innerText = player.avatar || '⚽';
+    document.getElementById('profile-pseudo').innerText = player.pseudo;
+    document.getElementById('profile-stat-rank').innerText = `#${player.rank}`;
+    document.getElementById('profile-stat-pts').innerText = `${player.totalPoints} pts`;
+    document.getElementById('profile-stat-details').innerText = `Détails : ${player.exacts} exacts | ${player.diffs} écarts | ${player.partials} issues`;
+    renderTrophyGrid('profile-trophy-section', player);
+
+    document.getElementById('profile-modal').style.display = 'flex';
+}
+
+function closeProfileModal() { document.getElementById('profile-modal').style.display = 'none'; }
+
+function setupLeaderboardProfileLinks() {
+    const tbody = document.getElementById('leaderboard-tbody');
+    if (!tbody || tbody.dataset.profileLinksBound) return;
+    tbody.dataset.profileLinksBound = '1';
+    tbody.addEventListener('click', (e) => {
+        const link = e.target.closest('.leaderboard-pseudo-link');
+        if (link) openProfileModal(link.dataset.pseudo);
+    });
+}
+
 async function loadMatchPronostics(matchId) {
     const container = document.getElementById('prono-list-container'); container.innerHTML = "Chargement...";
     const { data: usersData, error: uError } = await supabaseClient.from('users').select('pseudo, avatar');
@@ -874,10 +1081,11 @@ async function calculateLeaderboard() {
 
     let userScores = {};
     users.forEach(u => { 
-        userScores[u.pseudo] = { pseudo: u.pseudo, avatar: u.avatar || '⚽', exacts: 0, diffs: 0, partials: 0, totalPoints: 0 }; 
+        userScores[u.pseudo] = { pseudo: u.pseudo, avatar: u.avatar || '⚽', exacts: 0, diffs: 0, partials: 0, totalPoints: 0, totalPronos: 0 }; 
     });
 
     pronos.forEach(p => {
+        if (userScores[p.pseudo]) userScores[p.pseudo].totalPronos++;
         const actS1 = scores[`${p.match_id}-0`], actS2 = scores[`${p.match_id}-1`];
         if (actS1 !== undefined && actS2 !== undefined && userScores[p.pseudo]) {
             const prS1 = p.predicted_score1, prS2 = p.predicted_score2;
@@ -952,14 +1160,16 @@ async function calculateLeaderboard() {
     const counts = {};
     rankList.forEach(p => { counts[p.rank] = (counts[p.rank] || 0) + 1; });
 
+    const session = getSession();
     tbody.innerHTML = rankList.map((player) => {
         const isTie = counts[player.rank] > 1;
         const stringRank = isTie ? `#${player.rank} <span style="font-size:0.65rem; opacity:0.6; font-weight:normal;">(ex.)</span>` : `#${player.rank}`;
         const rankClass = player.rank === 1 ? 'rank-row-gold' : player.rank === 2 ? 'rank-row-silver' : player.rank === 3 ? 'rank-row-bronze' : '';
+        const isMeClass = (session && session.pseudo === player.pseudo) ? ' is-me' : '';
         return `
-            <tr class="${rankClass}">
+            <tr class="${rankClass}${isMeClass}">
                 <td><strong>${stringRank}</strong></td>
-                <td><span class="profile-avatar">${player.avatar}</span> ${player.pseudo}</td>
+                <td><span class="leaderboard-pseudo-link" data-pseudo="${escapeHTML(player.pseudo)}"><span class="profile-avatar">${player.avatar}</span> ${escapeHTML(player.pseudo)}</span></td>
                 <td style="text-align: center; color: var(--text-muted); font-weight:600;">${player.exacts}</td>
                 <td style="text-align: center; color: var(--text-muted); font-weight:600;">${player.diffs}</td>
                 <td style="text-align: center; color: var(--text-muted); font-weight:600;">${player.partials}</td>
