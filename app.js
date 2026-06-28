@@ -132,14 +132,14 @@ const MANUAL_KNOCKOUT_TEAMS = {
     "16-3": { t1: "Allemagne", t2: "Paraguay" },
     "16-4": { t1: "Pays-Bas", t2: "Maroc" },
     "16-5": { t1: "Cote dIvoire", t2: "Norvège" },
-    "16-6": { t1: "France", t2: "Suède" },
+    "16-6": { t1: "France", t2: "Suede" },
     "16-7": { t1: "Mexique", t2: "Equateur" },
     "16-8": { t1: "Angleterre", t2: "RD Congo" },
-    "16-9": { t1: "Belgique", t2: "Sénégal" },
+    "16-9": { t1: "Belgique", t2: "Senegal" },
     "16-10": { t1: "USA", t2: "Bosnie" },
     "16-11": { t1: "Espagne", t2: "Autriche" },
     "16-12": { t1: "Portugal", t2: "Croatie" },
-    "16-13": { t1: "Suisse", t2: "Algérie" },
+    "16-13": { t1: "Suisse", t2: "Algerie" },
     "16-14": { t1: "Australie", t2: "Egypte" },
     "16-15": { t1: "Argentine", t2: "Cap-Vert" },
     "16-16": { t1: "Colombie", t2: "Ghana" }
@@ -214,22 +214,22 @@ const KNOCKOUT_LINKS = {
 const TROPHIES = [
     {
         id: 'points', icon: '⭐', label: 'Buteur de Légende',
-        thresholds: [10, 50, 100], unit: 'pts',
+        thresholds: [10, 50, 80], unit: 'pts',
         getValue: p => p.totalPoints || 0
     },
     {
         id: 'exacts', icon: '🎯', label: "Tireur d'Élite",
-        thresholds: [2, 5, 10], unit: 'scores exacts',
+        thresholds: [1, 4, 7], unit: 'scores exacts',
         getValue: p => p.exacts || 0
     },
     {
         id: 'diffs', icon: '📐', label: 'Stratège',
-        thresholds: [3, 8, 15], unit: 'bonnes différences',
+        thresholds: [2, 5, 10], unit: 'bonnes différences',
         getValue: p => p.diffs || 0
     },
     {
         id: 'pronos', icon: '📅', label: 'Assidu',
-        thresholds: [10, 20, 40], unit: 'pronostics déposés',
+        thresholds: [10, 20, 30], unit: 'pronostics déposés',
         getValue: p => p.totalPronos || 0
     },
     {
